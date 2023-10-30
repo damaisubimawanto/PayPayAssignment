@@ -1,4 +1,4 @@
-package com.damai.paypayexchangerates
+package com.damai.paypayexchangerates.ui.main
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
