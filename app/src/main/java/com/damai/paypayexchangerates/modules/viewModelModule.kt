@@ -13,7 +13,8 @@ val viewModelModule = module {
     viewModel {
         MainViewModel(
             app = androidApplication(),
-            dispatcher = get()
+            dispatcher = get(),
+            getLatestExchangeRatesUseCase = get()
         )
     }
 }

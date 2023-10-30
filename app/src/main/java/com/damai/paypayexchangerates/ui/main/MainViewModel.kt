@@ -2,11 +2,14 @@ package com.damai.paypayexchangerates.ui.main
 
 import android.app.Application
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.damai.base.BaseViewModel
 import com.damai.base.coroutines.DispatcherProvider
 import com.damai.base.extensions.asLiveData
+import com.damai.base.networks.Resource
 import com.damai.domain.models.RateModel
 import com.damai.domain.usecases.GetLatestExchangeRatesUseCase
+import kotlinx.coroutines.launch
 
 /**
  * Created by damai007 on 30/October/2023
@@ -22,7 +25,26 @@ class MainViewModel(
     val exchangeRateListLiveData = _exchangeRateListLiveData.asLiveData()
     //endregion `Live Data`
 
-    fun getExchangeRates() {
+    //region Variable Data
+    private val exchangeRatePoolList: MutableList<RateModel> = mutableListOf()
+    //endregion `Variable Data`
 
+    fun getExchangeRates() {
+        viewModelScope.launch(dispatcher.io()) {
+            getLatestExchangeRatesUseCase().collect { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        resource.model?.let { model ->
+                            exchangeRatePoolList.clear()
+                            model.rates?.let(exchangeRatePoolList::addAll)
+                            _exchangeRateListLiveData.postValue(exchangeRatePoolList)
+                        }
+                    }
+                    is Resource.Error -> {
+
+                    }
+                }
+            }
+        }
     }
 }

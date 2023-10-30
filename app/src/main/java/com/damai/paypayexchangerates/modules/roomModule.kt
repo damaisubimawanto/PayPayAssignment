@@ -1,5 +1,7 @@
 package com.damai.paypayexchangerates.modules
 
+import com.damai.paypayexchangerates.application.AppDatabase
+import org.koin.android.ext.koin.androidApplication
 import org.koin.dsl.module
 
 /**
@@ -7,5 +9,11 @@ import org.koin.dsl.module
  */
 
 val roomModule = module {
+    single {
+        AppDatabase.buildDatabase(application = androidApplication())
+    }
 
+    factory {
+        get<AppDatabase>().rateDao()
+    }
 }
