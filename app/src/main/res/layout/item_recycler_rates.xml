@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="com.damai.base.bindingadapters.ViewBindingAdapter" />
+
+        <variable
+            name="model"
+            type="com.damai.domain.models.RateModel" />
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="@dimen/dimen_10"
+        android:paddingVertical="@dimen/dimen_8">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvRatesCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{model.code}"
+            android:textColor="@color/dark_orange"
+            android:textSize="@dimen/font_12"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="IDR" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvRatesValue"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:gravity="center_horizontal"
+            android:maxLines="1"
+            android:paddingTop="@dimen/dimen_8"
+            android:singleLine="true"
+            android:textColor="@color/black"
+            android:textSize="@dimen/font_16"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvRatesCode"
+            app:ratesValue="@{model.value}"
+            tools:text="15,848.519561"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

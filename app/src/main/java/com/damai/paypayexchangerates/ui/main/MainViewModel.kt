@@ -47,4 +47,8 @@ class MainViewModel(
             }
         }
     }
+
+    fun doExchangeRatesCalculation(givenValue: Double) {
+
+    }
 }
