@@ -15,4 +15,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "PayPayExchangeRates"
 include(":app")
- 
+include(":base")
+include(":data")
+include(":domain")
