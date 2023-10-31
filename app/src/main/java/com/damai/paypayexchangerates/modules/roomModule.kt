@@ -16,4 +16,8 @@ val roomModule = module {
     factory {
         get<AppDatabase>().rateDao()
     }
+
+    factory {
+        get<AppDatabase>().currencyNameDao()
+    }
 }

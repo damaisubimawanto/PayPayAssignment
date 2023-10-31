@@ -5,7 +5,9 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.damai.base.utils.Constants.ROOM_DATABASE_NAME
+import com.damai.domain.daos.CurrencyNameDao
 import com.damai.domain.daos.RateDao
+import com.damai.domain.entities.CurrencyNameEntity
 import com.damai.domain.entities.RateEntity
 
 /**
@@ -13,7 +15,8 @@ import com.damai.domain.entities.RateEntity
  */
 @Database(
     entities = [
-        RateEntity::class
+        RateEntity::class,
+        CurrencyNameEntity::class
     ],
     version = 1,
     exportSchema = false
@@ -21,6 +24,8 @@ import com.damai.domain.entities.RateEntity
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun rateDao(): RateDao
+
+    abstract fun currencyNameDao(): CurrencyNameDao
 
     companion object {
 

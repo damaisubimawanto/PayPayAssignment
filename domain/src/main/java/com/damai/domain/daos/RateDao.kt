@@ -16,5 +16,5 @@ interface RateDao {
     suspend fun insert(rateEntity: RateEntity)
 
     @Query("SELECT * FROM rate_entity ORDER BY code ASC")
-    suspend fun getAllRateEntity(): List<RateEntity>
+    suspend fun getAllRateEntityList(): List<RateEntity>
 }

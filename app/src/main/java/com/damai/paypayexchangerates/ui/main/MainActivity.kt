@@ -42,8 +42,6 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainViewModel>() {
 
             addOnTextChanged { text ->
                 if (text.isEmpty()) {
-                    setText("1")
-                    setCursorAtEnd()
                     return@addOnTextChanged
                 }
                 text.toDoubleOrNull()?.let(viewModel::doExchangeRatesCalculation)

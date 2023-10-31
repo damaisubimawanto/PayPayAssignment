@@ -13,8 +13,14 @@ val repositoryModule = module {
         HomeRepositoryImpl(
             homeService = get(),
             dispatcher = get(),
+            currencyNameDao = get(),
+            rateDao = get(),
             exchangeRatesMapper = get(),
-            currencyNamesMapper = get()
+            currencyNamesMapper = get(),
+            currencyNameEntityToModelMapper = get(),
+            currencyNamePairToCurrencyNameEntityMapper = get(),
+            rateEntityToRateModelMapper = get(),
+            rateModelToRateEntityMapper = get()
         )
     }
 }

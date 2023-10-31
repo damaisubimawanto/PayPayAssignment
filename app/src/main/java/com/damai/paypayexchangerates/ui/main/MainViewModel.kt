@@ -85,6 +85,7 @@ class MainViewModel(
     }
 
     fun doExchangeRatesCalculation(givenValue: Double) {
+        if (givenValue == 0.0) return
         if (latestRateValue == givenValue) return
         latestRateValue = givenValue
 
