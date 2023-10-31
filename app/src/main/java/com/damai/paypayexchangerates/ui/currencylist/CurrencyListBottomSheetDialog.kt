@@ -34,7 +34,7 @@ class CurrencyListBottomSheetDialog : BaseBottomSheetDialogFragment<FragmentCurr
     override fun FragmentCurrencyListBinding.viewInitialization() {
         with(rvCurrencyNames) {
             currencyNameAdapter = CurrencyNameAdapter { currencyCode ->
-                viewModel.setBaseCurrencyCode(code = currencyCode)
+                viewModel.changeBaseCurrency(code = currencyCode)
                 dialog?.dismiss()
             }
             adapter = currencyNameAdapter
