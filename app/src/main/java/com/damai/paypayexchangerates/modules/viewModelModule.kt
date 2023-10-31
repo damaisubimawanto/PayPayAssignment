@@ -14,7 +14,8 @@ val viewModelModule = module {
         MainViewModel(
             app = androidApplication(),
             dispatcher = get(),
-            getLatestExchangeRatesUseCase = get()
+            getLatestExchangeRatesUseCase = get(),
+            getCurrencyNamesUseCase = get()
         )
     }
 }

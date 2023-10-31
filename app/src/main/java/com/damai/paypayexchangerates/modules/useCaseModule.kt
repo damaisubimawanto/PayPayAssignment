@@ -1,5 +1,6 @@
 package com.damai.paypayexchangerates.modules
 
+import com.damai.domain.usecases.GetCurrencyNamesUseCase
 import com.damai.domain.usecases.GetLatestExchangeRatesUseCase
 import org.koin.dsl.module
 
@@ -10,6 +11,11 @@ import org.koin.dsl.module
 val useCaseModule = module {
     single {
         GetLatestExchangeRatesUseCase(
+            homeRepository = get()
+        )
+    }
+    single {
+        GetCurrencyNamesUseCase(
             homeRepository = get()
         )
     }

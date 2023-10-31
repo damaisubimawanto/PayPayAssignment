@@ -36,9 +36,11 @@
             android:id="@+id/btnCurrency"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:drawableEnd="@drawable/ic_expand_more_24px"
             android:text="@{vm.currencyBaseLiveData}"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/etAmount" />
+            app:layout_constraintTop_toBottomOf="@+id/etAmount"
+            tools:text="USD" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvExchangeRates"

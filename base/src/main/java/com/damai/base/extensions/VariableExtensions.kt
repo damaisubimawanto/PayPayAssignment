@@ -2,6 +2,9 @@ package com.damai.base.extensions
 
 import com.damai.base.BaseResponse
 import com.damai.base.utils.Constants.EMPTY_CODE
+import com.damai.base.utils.Constants.MAP_KEY_ERROR
+import com.damai.base.utils.Constants.MAP_KEY_MESSAGE
+import com.damai.base.utils.Constants.MAP_KEY_STATUS_CODE
 import com.damai.base.utils.Constants.SUCCESS_CODE
 
 /**
@@ -26,4 +29,16 @@ fun BaseResponse.getResponseErrorMessage(): String? = if (error.orFalse()) {
     message
 } else {
     null
+}
+
+fun BaseResponse.mappingResponseError(response: Map<String, String>) {
+    if (response.containsKey(MAP_KEY_ERROR)) {
+        error = true
+    }
+    if (response.containsKey(MAP_KEY_STATUS_CODE)) {
+        status = response[MAP_KEY_STATUS_CODE]?.toIntOrNull()
+    }
+    if (response.containsKey(MAP_KEY_MESSAGE)) {
+        message = response[MAP_KEY_MESSAGE]
+    }
 }

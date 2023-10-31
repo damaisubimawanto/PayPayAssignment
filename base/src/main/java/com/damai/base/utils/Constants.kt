@@ -16,4 +16,8 @@ object Constants {
 
     const val API_KEY = "d87191c8104448bb90b6229cd4da486b"
     const val CURRENCY_BASE = "USD"
+
+    const val MAP_KEY_ERROR = "error"
+    const val MAP_KEY_STATUS_CODE = "status"
+    const val MAP_KEY_MESSAGE = "message"
 }

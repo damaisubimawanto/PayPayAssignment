@@ -8,7 +8,10 @@ import com.damai.base.coroutines.DispatcherProvider
 import com.damai.base.extensions.asLiveData
 import com.damai.base.networks.Resource
 import com.damai.domain.models.RateModel
+import com.damai.domain.usecases.GetCurrencyNamesUseCase
 import com.damai.domain.usecases.GetLatestExchangeRatesUseCase
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -17,7 +20,8 @@ import kotlinx.coroutines.launch
 class MainViewModel(
     app: Application,
     private val dispatcher: DispatcherProvider,
-    private val getLatestExchangeRatesUseCase: GetLatestExchangeRatesUseCase
+    private val getLatestExchangeRatesUseCase: GetLatestExchangeRatesUseCase,
+    private val getCurrencyNamesUseCase: GetCurrencyNamesUseCase
 ) : BaseViewModel(app = app) {
 
     //region Live Data
@@ -35,12 +39,38 @@ class MainViewModel(
 
     fun getExchangeRates() {
         viewModelScope.launch(dispatcher.io()) {
+            val currencyNameListResource = async {
+                getCurrencyNamesUseCase().first()
+            }.await()
+            val currencyNameList = when (currencyNameListResource) {
+                is Resource.Success -> {
+                    currencyNameListResource.model?.currencyList
+                }
+                is Resource.Error -> {
+                    null
+                }
+            }
+
             getLatestExchangeRatesUseCase().collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
                         resource.model?.let { model ->
                             exchangeRatePoolList.clear()
-                            model.rates?.let(exchangeRatePoolList::addAll)
+
+                            /* We want to join the currency name from currencyNameList into
+                             * the exchangeRatePoolList. */
+                            model.rates?.map { rate ->
+                                val currency = currencyNameList?.find {
+                                    it.first == rate.code
+                                }
+                                if (currency == null) {
+                                    rate
+                                } else {
+                                    rate.copy(
+                                        name = currency.second
+                                    )
+                                }
+                            }?.let(exchangeRatePoolList::addAll)    /* Added the joined list. */
                             exchangeRatePoolList.let(_exchangeRateListLiveData::postValue)
 
                             model.base.let(_currencyBaseLiveData::postValue)

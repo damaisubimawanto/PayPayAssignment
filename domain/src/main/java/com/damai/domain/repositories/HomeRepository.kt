@@ -1,6 +1,7 @@
 package com.damai.domain.repositories
 
 import com.damai.base.networks.Resource
+import com.damai.domain.models.CurrencyNamesModel
 import com.damai.domain.models.ExchangeRatesModel
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.Throws
@@ -12,4 +13,7 @@ interface HomeRepository {
 
     @Throws(Exception::class)
     fun getLatestExchangeRates(): Flow<Resource<ExchangeRatesModel>>
+
+    @Throws(Exception::class)
+    fun getCurrencyNames(): Flow<Resource<CurrencyNamesModel>>
 }

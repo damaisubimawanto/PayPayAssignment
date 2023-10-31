@@ -4,6 +4,7 @@ import com.damai.base.BaseActivity
 import com.damai.base.extensions.addOnTextChanged
 import com.damai.base.extensions.observe
 import com.damai.base.extensions.setCursorAtEnd
+import com.damai.base.extensions.setCustomOnClickListener
 import com.damai.paypayexchangerates.R
 import com.damai.paypayexchangerates.databinding.ActivityMainBinding
 import com.damai.paypayexchangerates.ui.main.adapter.RatesAdapter
@@ -47,6 +48,10 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainViewModel>() {
                 }
                 text.toDoubleOrNull()?.let(viewModel::doExchangeRatesCalculation)
             }
+        }
+
+        btnCurrency.setCustomOnClickListener {
+            // TODO: Open currency list dialog
         }
     }
 

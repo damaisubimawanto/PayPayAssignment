@@ -1,5 +1,6 @@
 package com.damai.paypayexchangerates.modules
 
+import com.damai.data.mappers.CurrencyNamesResponseToCurrencyNamesModelMapper
 import com.damai.data.mappers.ExchangeRatesResponseToExchangeRatesModelMapper
 import org.koin.dsl.module
 
@@ -10,5 +11,8 @@ import org.koin.dsl.module
 val mapperModule = module {
     factory {
         ExchangeRatesResponseToExchangeRatesModelMapper()
+    }
+    factory {
+        CurrencyNamesResponseToCurrencyNamesModelMapper()
     }
 }

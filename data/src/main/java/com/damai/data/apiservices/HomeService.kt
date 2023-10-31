@@ -14,4 +14,9 @@ interface HomeService {
         @Query("app_id") appId: String,
         @Query("base") base: String
     ): ExchangeRatesResponse
+
+    @GET("/api/currencies.json")
+    suspend fun getCurrencyNames(
+        @Query("app_id") appId: String
+    ): Map<String, String>
 }
