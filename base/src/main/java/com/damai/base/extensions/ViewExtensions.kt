@@ -55,3 +55,9 @@ fun AppCompatEditText.addOnTextChanged(callback: (text: String) -> Unit) {
         override fun afterTextChanged(p0: Editable?) {}
     })
 }
+
+fun AppCompatEditText.setCursorAtEnd() {
+    text?.length?.let {
+        setSelection(it)
+    }
+}

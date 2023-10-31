@@ -27,6 +27,7 @@ class MainViewModel(
 
     //region Variable Data
     private val exchangeRatePoolList: MutableList<RateModel> = mutableListOf()
+    private var latestRateValue = 1.0
     //endregion `Variable Data`
 
     fun getExchangeRates() {
@@ -49,6 +50,17 @@ class MainViewModel(
     }
 
     fun doExchangeRatesCalculation(givenValue: Double) {
+        if (latestRateValue == givenValue) return
+        latestRateValue = givenValue
 
+        viewModelScope.launch(dispatcher.main()) {
+            val newList = exchangeRatePoolList.map {
+                val newValue = givenValue * it.value
+                it.copy(
+                    value = newValue
+                )
+            }
+            newList.let(_exchangeRateListLiveData::setValue)
+        }
     }
 }

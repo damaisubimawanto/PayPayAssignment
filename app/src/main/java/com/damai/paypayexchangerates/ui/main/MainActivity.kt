@@ -3,6 +3,7 @@ package com.damai.paypayexchangerates.ui.main
 import com.damai.base.BaseActivity
 import com.damai.base.extensions.addOnTextChanged
 import com.damai.base.extensions.observe
+import com.damai.base.extensions.setCursorAtEnd
 import com.damai.paypayexchangerates.R
 import com.damai.paypayexchangerates.databinding.ActivityMainBinding
 import com.damai.paypayexchangerates.ui.main.adapter.RatesAdapter
@@ -26,13 +27,23 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainViewModel>() {
     }
 
     override fun ActivityMainBinding.setupListeners() {
-        etAmount.addOnTextChanged { text ->
-            if (text.isEmpty()) {
-                etAmount.setText("1")
-                return@addOnTextChanged
+        with(etAmount) {
+            setOnFocusChangeListener { v, hasFocus ->
+                if (hasFocus) {
+                    v.post {
+                        setCursorAtEnd()
+                    }
+                }
             }
 
-
+            addOnTextChanged { text ->
+                if (text.isEmpty()) {
+                    setText("1")
+                    setCursorAtEnd()
+                    return@addOnTextChanged
+                }
+                text.toDoubleOrNull()?.let(viewModel::doExchangeRatesCalculation)
+            }
         }
     }
 
