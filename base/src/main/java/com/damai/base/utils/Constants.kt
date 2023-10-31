@@ -21,4 +21,6 @@ object Constants {
     const val MAP_KEY_ERROR = "error"
     const val MAP_KEY_STATUS_CODE = "status"
     const val MAP_KEY_MESSAGE = "message"
+
+    const val TAG_CURRENCY_NAME_LIST = "CurrencyListBottomSheetDialog"
 }

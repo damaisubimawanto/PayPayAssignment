@@ -14,4 +14,11 @@ object ViewBindingAdapter {
         val ratesText = ratesValue.toString()
         view.text = ratesText
     }
+
+    @JvmStatic
+    @BindingAdapter(value = ["currencyName", "currencyCode"], requireAll = true)
+    fun bindCurrencyNameAndCode(view: AppCompatTextView, name: String, code: String) {
+        val currencyText = "$name $code"
+        view.text = currencyText
+    }
 }

@@ -1,5 +1,6 @@
 package com.damai.base.extensions
 
+import android.content.res.Resources
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import com.damai.base.utils.Event
@@ -23,3 +24,5 @@ fun <T> FragmentActivity.observe(
 ) {
     liveData.observe(this, observer)
 }
+
+fun getScreenHeight() = Resources.getSystem().displayMetrics.heightPixels

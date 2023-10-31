@@ -36,9 +36,11 @@ class RatesAdapter : ListAdapter<RateModel, RatesAdapter.RatesVH>(RatesComparato
     ) : BaseViewHolder<ItemRecyclerRatesBinding, RateModel>(binding = binding) {
 
         override fun bind(data: RateModel, position: Int) {
-            binding.model = data
-            if (binding.hasPendingBindings()) {
-                binding.executePendingBindings()
+            with(binding) {
+                model = data
+                if (hasPendingBindings()) {
+                    executePendingBindings()
+                }
             }
         }
     }

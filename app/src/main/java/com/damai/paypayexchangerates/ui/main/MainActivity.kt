@@ -7,13 +7,16 @@ import com.damai.base.extensions.setCursorAtEnd
 import com.damai.base.extensions.setCustomOnClickListener
 import com.damai.paypayexchangerates.R
 import com.damai.paypayexchangerates.databinding.ActivityMainBinding
+import com.damai.paypayexchangerates.navigations.PageNavigationApi
 import com.damai.paypayexchangerates.ui.main.adapter.RatesAdapter
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : BaseActivity<ActivityMainBinding, MainViewModel>() {
 
     //region Variables
     private lateinit var ratesAdapter: RatesAdapter
+    private val pageNavigationApi: PageNavigationApi by inject()
     //endregion `Variables`
 
     override val layoutResource: Int = R.layout.activity_main
@@ -49,7 +52,9 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainViewModel>() {
         }
 
         btnCurrency.setCustomOnClickListener {
-            // TODO: Open currency list dialog
+            pageNavigationApi.openCurrencyNameBottomSheetDialog(
+                fragmentActivity = this@MainActivity
+            )
         }
     }
 

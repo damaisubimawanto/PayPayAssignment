@@ -72,8 +72,7 @@ class MainViewModel(
                                 }
                             }?.let(exchangeRatePoolList::addAll)    /* Added the joined list. */
                             exchangeRatePoolList.let(_exchangeRateListLiveData::postValue)
-
-                            model.base.let(_currencyBaseLiveData::postValue)
+                            setBaseCurrencyCode(code = model.base)
                         }
                     }
                     is Resource.Error -> {
@@ -98,5 +97,9 @@ class MainViewModel(
             }
             newList.let(_exchangeRateListLiveData::setValue)
         }
+    }
+
+    fun setBaseCurrencyCode(code: String) {
+        code.let(_currencyBaseLiveData::postValue)
     }
 }

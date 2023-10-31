@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">PayPayExchangeRates</string>
+    <string name="title_dialog_currency_names">Choose Currency</string>
 </resources>

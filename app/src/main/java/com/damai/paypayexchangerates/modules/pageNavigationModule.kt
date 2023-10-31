@@ -1,5 +1,7 @@
 package com.damai.paypayexchangerates.modules
 
+import com.damai.paypayexchangerates.navigations.PageNavigationApi
+import com.damai.paypayexchangerates.navigations.PageNavigationApiImpl
 import org.koin.dsl.module
 
 /**
@@ -7,5 +9,7 @@ import org.koin.dsl.module
  */
 
 val pageNavigationModule = module {
-
+    factory<PageNavigationApi> {
+        PageNavigationApiImpl()
+    }
 }
