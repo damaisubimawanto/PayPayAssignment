@@ -13,41 +13,102 @@
 
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="@dimen/dimen_10"
-        android:paddingVertical="@dimen/dimen_8">
+        app:cardCornerRadius="@dimen/dimen_8"
+        app:cardElevation="@dimen/dimen_2"
+        app:cardMaxElevation="@dimen/dimen_4"
+        app:cardUseCompatPadding="true">
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tvRatesCode"
-            android:layout_width="wrap_content"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@{model.code}"
-            android:textColor="@color/dark_orange"
-            android:textSize="@dimen/font_12"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="IDR" />
+            tools:background="@color/orange">
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tvRatesValue"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:gravity="center_horizontal"
-            android:maxLines="1"
-            android:paddingTop="@dimen/dimen_8"
-            android:singleLine="true"
-            android:textColor="@color/black"
-            android:textSize="@dimen/font_16"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvRatesCode"
-            app:ratesValue="@{model.value}"
-            tools:text="15,848.519561"/>
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/ivBackground"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:uniqueCode="@{model.code}" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <View
+                android:id="@+id/viewBgOverlay"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@color/black_semi_transparent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvRatesCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingVertical="@dimen/dimen_8"
+                android:text="@{model.code}"
+                android:textColor="@color/white"
+                android:textSize="@dimen/font_24"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="IDR" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvRatesName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:lines="2"
+                android:maxLines="2"
+                android:text="@{model.name}"
+                android:textColor="@color/white"
+                android:textSize="@dimen/font_18"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRightPadding"
+                app:layout_constraintStart_toEndOf="@+id/guidelineLeftPadding"
+                app:layout_constraintTop_toBottomOf="@+id/tvRatesCode"
+                tools:text="Indonesian Rupiah" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvRatesValue"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:gravity="center_horizontal"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="@color/white"
+                android:textSize="@dimen/font_24"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/guidelineRightPadding"
+                app:layout_constraintStart_toEndOf="@+id/guidelineLeftPadding"
+                app:layout_constraintTop_toBottomOf="@+id/tvRatesName"
+                app:ratesValue="@{model.value}"
+                tools:text="15,848.52"/>
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guidelineLeftPadding"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_begin="@dimen/dimen_4" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guidelineRightPadding"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_end="@dimen/dimen_4" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.cardview.widget.CardView>
 
 </layout>

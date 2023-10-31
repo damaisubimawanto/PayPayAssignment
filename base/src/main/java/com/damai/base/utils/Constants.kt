@@ -6,6 +6,7 @@ package com.damai.base.utils
 object Constants {
 
     const val BASE_URL = "https://openexchangerates.org"
+    const val RANDOM_IMAGE_URL = "https://source.unsplash.com/random/200x200?sig="
     const val ROOM_DATABASE_NAME = "paypay-exchange-rates-database"
     const val HOME_PREFERENCES = "HomePreferences"
 
