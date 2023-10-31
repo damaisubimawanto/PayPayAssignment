@@ -20,6 +20,9 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainViewModel>() {
     override val viewModel: MainViewModel by viewModel()
 
     override fun ActivityMainBinding.viewInitialization() {
+        vm = viewModel
+        lifecycleOwner = this@MainActivity
+
         with(rvExchangeRates) {
             ratesAdapter = RatesAdapter()
             adapter = ratesAdapter

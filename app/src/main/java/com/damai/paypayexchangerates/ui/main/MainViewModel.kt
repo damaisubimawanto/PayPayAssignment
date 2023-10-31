@@ -23,6 +23,9 @@ class MainViewModel(
     //region Live Data
     private val _exchangeRateListLiveData = MutableLiveData<List<RateModel>>()
     val exchangeRateListLiveData = _exchangeRateListLiveData.asLiveData()
+
+    private val _currencyBaseLiveData = MutableLiveData<String>()
+    val currencyBaseLiveData = _currencyBaseLiveData.asLiveData()
     //endregion `Live Data`
 
     //region Variable Data
@@ -38,7 +41,9 @@ class MainViewModel(
                         resource.model?.let { model ->
                             exchangeRatePoolList.clear()
                             model.rates?.let(exchangeRatePoolList::addAll)
-                            _exchangeRateListLiveData.postValue(exchangeRatePoolList)
+                            exchangeRatePoolList.let(_exchangeRateListLiveData::postValue)
+
+                            model.base.let(_currencyBaseLiveData::postValue)
                         }
                     }
                     is Resource.Error -> {
