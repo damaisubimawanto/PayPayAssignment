@@ -5,6 +5,7 @@ package com.damai.paypayexchangerates.modules
  */
 
 val allModules = listOf(
+    cacheModule,
     mapperModule,
     networkModule,
     pageNavigationModule,

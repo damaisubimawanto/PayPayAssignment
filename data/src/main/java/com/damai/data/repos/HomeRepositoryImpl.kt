@@ -7,6 +7,7 @@ import com.damai.base.networks.Resource
 import com.damai.base.utils.Constants.API_KEY
 import com.damai.base.utils.Constants.CURRENCY_BASE
 import com.damai.data.apiservices.HomeService
+import com.damai.data.caches.HomeCache
 import com.damai.data.mappers.CurrencyNameEntityToCurrencyNamesModelMapper
 import com.damai.data.mappers.CurrencyNamePairToCurrencyNameEntityMapper
 import com.damai.data.mappers.CurrencyNamesResponseToCurrencyNamesModelMapper
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.Flow
  */
 class HomeRepositoryImpl(
     private val homeService: HomeService,
+    private val homeCache: HomeCache,
     private val dispatcher: DispatcherProvider,
     private val currencyNameDao: CurrencyNameDao,
     private val rateDao: RateDao,
@@ -55,14 +57,16 @@ class HomeRepositoryImpl(
 
             override suspend fun localFetch(): ExchangeRatesModel? {
                 val rateEntity = rateDao.getAllRateEntityList()
-                return if (rateEntity.isEmpty()) {
-                    null
-                } else {
-                    ExchangeRatesModel(
-                        timestamp = System.currentTimeMillis(),
-                        base = CURRENCY_BASE,
-                        rates = rateEntityToRateModelMapper.map(value = rateEntity)
-                    )
+                return when {
+                    rateEntity.isEmpty() -> null
+                    homeCache.isExchangeRatesCacheExpired() -> null
+                    else -> {
+                        ExchangeRatesModel(
+                            timestamp = System.currentTimeMillis(),
+                            base = CURRENCY_BASE,
+                            rates = rateEntityToRateModelMapper.map(value = rateEntity)
+                        )
+                    }
                 }
             }
 
@@ -70,6 +74,7 @@ class HomeRepositoryImpl(
                 data.rates?.forEach {
                     rateDao.insert(rateEntity = rateModelToRateEntityMapper.map(value = it))
                 }
+                homeCache.setLatestUpdateExchangeRates(value = System.currentTimeMillis())
             }
         }.asFlow()
     }
@@ -96,10 +101,12 @@ class HomeRepositoryImpl(
 
             override suspend fun localFetch(): CurrencyNamesModel? {
                 val currencyNameEntityList = currencyNameDao.getAllCurrencyNameEntityList()
-                return if (currencyNameEntityList.isEmpty()) {
-                    null
-                } else {
-                    currencyNameEntityToModelMapper.map(value = currencyNameEntityList)
+                return when {
+                    currencyNameEntityList.isEmpty() -> null
+                    homeCache.isCurrencyNamesCacheExpired() -> null
+                    else -> {
+                        currencyNameEntityToModelMapper.map(value = currencyNameEntityList)
+                    }
                 }
             }
 
@@ -111,6 +118,7 @@ class HomeRepositoryImpl(
                         )
                     )
                 }
+                homeCache.setLatestUpdateCurrencyNames(value = System.currentTimeMillis())
             }
         }.asFlow()
     }

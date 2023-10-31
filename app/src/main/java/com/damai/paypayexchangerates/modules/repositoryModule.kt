@@ -12,6 +12,7 @@ val repositoryModule = module {
     single<HomeRepository> {
         HomeRepositoryImpl(
             homeService = get(),
+            homeCache = get(),
             dispatcher = get(),
             currencyNameDao = get(),
             rateDao = get(),
