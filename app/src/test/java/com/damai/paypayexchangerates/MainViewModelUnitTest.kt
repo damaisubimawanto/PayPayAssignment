@@ -557,6 +557,7 @@ class MainViewModelUnitTest {
         viewModel.changeBaseCurrency(code = codeCurrencyIndonesia)
 
         delay(2_000)
+        /* Verify if the observers have been any changed. */
         verify(exactly = 1) {
             currencyBaseObserver.onChanged(any())
         }
@@ -564,12 +565,13 @@ class MainViewModelUnitTest {
             exchangeRateListObserver.onChanged(any())
         }
 
+        /* Check and assert the currentBaseLiveData. */
         val currencyBaseTestObserver = viewModel.currencyBaseLiveData.test()
             .assertHasValue()
         val currencyBaseContent = currencyBaseTestObserver.value()
         assertEquals(codeCurrencyIndonesia, currencyBaseContent)
-        excludeRecords { viewModel.currencyBaseLiveData.observeForever(currencyBaseTestObserver) }
 
+        /* Check and assert the exchangeRateListLiveData. */
         val exchangeRateTestObserver = viewModel.exchangeRateListLiveData.test()
             .assertHasValue()
         val content = exchangeRateTestObserver.value()
@@ -580,7 +582,11 @@ class MainViewModelUnitTest {
         val expectedValueJapan = valueCurrencyJapan * currentAmount / valueCurrencyIndonesia
         assertTrue(content.first().value == expectedValueIndonesia)
         assertTrue(content[1].value == expectedValueJapan)
-        excludeRecords { viewModel.exchangeRateListLiveData.observeForever(exchangeRateTestObserver) }
+
+        excludeRecords {
+            viewModel.currencyBaseLiveData.observeForever(currencyBaseTestObserver)
+            viewModel.exchangeRateListLiveData.observeForever(exchangeRateTestObserver)
+        }
 
         confirmVerified(
             currencyBaseObserver,
