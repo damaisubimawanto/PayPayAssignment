@@ -507,7 +507,7 @@ class MainViewModelUnitTest {
     }
 
     @Test
-    fun `(-) change amount with 0 value will not update the currency value`() {
+    fun `(-) change amount with 0 value will not update the currency value`() = runTest {
         val newList = listOf(
             RateModel(
                 code = codeCurrencyIndonesia,
@@ -532,5 +532,59 @@ class MainViewModelUnitTest {
         assertTrue(content!!.size == 2)
         assertTrue(content.first().value == valueCurrencyIndonesia)
         assertTrue(content[1].value == valueCurrencyJapan)
+    }
+
+    @Test
+    fun `(+) change base currency should update the value of currency base and do the calculation`() = runTest {
+        val currentAmount = 1.0
+        val newList = listOf(
+            RateModel(
+                code = codeCurrencyIndonesia,
+                name = nameCurrencyIndonesia,
+                value = valueCurrencyIndonesia
+            ),
+            RateModel(
+                code = codeCurrencyJapan,
+                name = nameCurrencyJapan,
+                value = valueCurrencyJapan
+            )
+        )
+        /* Modified variables in viewModel for unit test scenario. */
+        viewModel.unitTestChangeExchangeRatePoolList(newList = newList)
+        viewModel.unitTestChangeExchangeRateListLiveData(newList = newList)
+
+        /* Change the base currency to IDR. */
+        viewModel.changeBaseCurrency(code = codeCurrencyIndonesia)
+
+        delay(2_000)
+        verify(exactly = 1) {
+            currencyBaseObserver.onChanged(any())
+        }
+        verify(exactly = 2) {
+            exchangeRateListObserver.onChanged(any())
+        }
+
+        val currencyBaseTestObserver = viewModel.currencyBaseLiveData.test()
+            .assertHasValue()
+        val currencyBaseContent = currencyBaseTestObserver.value()
+        assertEquals(codeCurrencyIndonesia, currencyBaseContent)
+        excludeRecords { viewModel.currencyBaseLiveData.observeForever(currencyBaseTestObserver) }
+
+        val exchangeRateTestObserver = viewModel.exchangeRateListLiveData.test()
+            .assertHasValue()
+        val content = exchangeRateTestObserver.value()
+        assertThat(content).isNotNull
+        assertThat(content).isNotEmpty
+        assertTrue(content.size == 2)
+        val expectedValueIndonesia = valueCurrencyIndonesia * currentAmount / valueCurrencyIndonesia
+        val expectedValueJapan = valueCurrencyJapan * currentAmount / valueCurrencyIndonesia
+        assertTrue(content.first().value == expectedValueIndonesia)
+        assertTrue(content[1].value == expectedValueJapan)
+        excludeRecords { viewModel.exchangeRateListLiveData.observeForever(exchangeRateTestObserver) }
+
+        confirmVerified(
+            currencyBaseObserver,
+            exchangeRateListObserver
+        )
     }
 }

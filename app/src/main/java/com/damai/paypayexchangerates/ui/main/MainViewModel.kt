@@ -143,11 +143,13 @@ class MainViewModel(
     }
 
     fun unitTestChangeExchangeRateListLiveData(newList: List<RateModel>) {
-        _exchangeRateListLiveData.value = newList
+        newList.let(_exchangeRateListLiveData::setValue)
     }
 
     fun unitTestChangeCurrentValueCurrencyBase(newValue: Double) {
         currentValueCurrencyBase = newValue
     }
+
+    fun unitTestGetCurrentValueCurrencyBase(): Double = currentValueCurrencyBase
     //endregion `Unit Test Functions`
 }
