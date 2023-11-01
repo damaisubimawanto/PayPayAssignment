@@ -21,9 +21,12 @@ import com.damai.paypayexchangerates.application.AppDatabase
 import com.damai.paypayexchangerates.ui.main.MainViewModel
 import com.damai.paypayexchangerates.utils.CoroutineTestRule
 import com.damai.paypayexchangerates.utils.InstantExecutorExtension
+import com.jraska.livedata.test
 import io.mockk.confirmVerified
 import io.mockk.every
+import io.mockk.excludeRecords
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
@@ -33,6 +36,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -105,11 +110,11 @@ class MainViewModelUnitTest {
 
     @Test
     fun `(+) insert new exchange rate into database should be success`() = runTest {
-        val symbolCurrency = "IDR"
+        val codeCurrency = "IDR"
         val valueCurrency = 10_000.0
 
         val rateEntity = RateEntity(
-            code = symbolCurrency,
+            code = codeCurrency,
             value = valueCurrency
         )
         rateDao.insert(rateEntity = rateEntity)
@@ -118,7 +123,7 @@ class MainViewModelUnitTest {
         val job = async(Dispatchers.IO) {
             val savedExchangeRateList = rateDao.getAllRateEntityList()
             assertThat(savedExchangeRateList).isNotEmpty
-            assertTrue(savedExchangeRateList.first().code == symbolCurrency)
+            assertTrue(savedExchangeRateList.first().code == codeCurrency)
             assertTrue(savedExchangeRateList.first().value == valueCurrency)
             latch.countDown()
         }
@@ -128,11 +133,11 @@ class MainViewModelUnitTest {
 
     @Test
     fun `(+) insert new currency name into database should be success`() = runTest {
-        val symbolCurrency = "IDR"
+        val codeCurrency = "IDR"
         val nameCurrency = "Indonesian Rupiah"
 
         val currencyNameEntity = CurrencyNameEntity(
-            code = symbolCurrency,
+            code = codeCurrency,
             name = nameCurrency
         )
         currencyNameDao.insert(currencyNameEntity = currencyNameEntity)
@@ -141,7 +146,7 @@ class MainViewModelUnitTest {
         val job = async(Dispatchers.IO) {
             val savedCurrencyNameList = currencyNameDao.getAllCurrencyNameEntityList()
             assertThat(savedCurrencyNameList).isNotEmpty
-            assertTrue(savedCurrencyNameList.first().code == symbolCurrency)
+            assertTrue(savedCurrencyNameList.first().code == codeCurrency)
             assertTrue(savedCurrencyNameList.first().name == nameCurrency)
             latch.countDown()
         }
@@ -229,20 +234,20 @@ class MainViewModelUnitTest {
 
     @Test
     fun `(+) join currency name list into exchange rates should be success`() {
-        val symbolCurrency = "IDR"
+        val codeCurrency = "IDR"
         val nameCurrency = "Indonesian Rupiah"
         val valueCurrency = 15_000.0
 
         val exchangeRateList = listOf(
             RateModel(
-                code = symbolCurrency,
+                code = codeCurrency,
                 name = "",
                 value = valueCurrency
             )
         )
 
         val currencyNameList = listOf(
-            Pair(symbolCurrency, nameCurrency)
+            Pair(codeCurrency, nameCurrency)
         )
 
         val joinedList = viewModel.joinCurrencyNamesIntoExchangeRates(
@@ -251,20 +256,20 @@ class MainViewModelUnitTest {
         )
         assertTrue(joinedList != null)
         assertTrue(joinedList?.first() != null)
-        assertTrue(joinedList?.first()?.code == symbolCurrency)
+        assertTrue(joinedList?.first()?.code == codeCurrency)
         assertTrue(joinedList?.first()?.name == nameCurrency)
         assertTrue(joinedList?.first()?.value == valueCurrency)
     }
 
     @Test
     fun `(+) join null currency name list into exchange rates should be success`() {
-        val symbolCurrency = "IDR"
+        val codeCurrency = "IDR"
         val nameCurrency = ""
         val valueCurrency = 15_000.0
 
         val exchangeRateList = listOf(
             RateModel(
-                code = symbolCurrency,
+                code = codeCurrency,
                 name = nameCurrency,
                 value = valueCurrency
             )
@@ -276,18 +281,18 @@ class MainViewModelUnitTest {
         )
         assertTrue(joinedList != null)
         assertTrue(joinedList?.first() != null)
-        assertTrue(joinedList?.first()?.code == symbolCurrency)
+        assertTrue(joinedList?.first()?.code == codeCurrency)
         assertTrue(joinedList?.first()?.name == nameCurrency)
         assertTrue(joinedList?.first()?.value == valueCurrency)
     }
 
     @Test
     fun `(-) join currency name list into empty exchange rates should be empty`() {
-        val symbolCurrency = "IDR"
+        val codeCurrency = "IDR"
         val nameCurrency = "Indonesian Rupiah"
 
         val currencyNameList = listOf(
-            Pair(symbolCurrency, nameCurrency)
+            Pair(codeCurrency, nameCurrency)
         )
 
         val joinedList = viewModel.joinCurrencyNamesIntoExchangeRates(
@@ -304,5 +309,81 @@ class MainViewModelUnitTest {
             currencyNameList = null
         )
         assertTrue(joinedList == null)
+    }
+
+    @Test
+    fun `(+) set base currency should update live data`() = runTest {
+        val codeCurrency = "IDR"
+        viewModel.setBaseCurrencyCode(code = codeCurrency)
+
+        verify(exactly = 1) {
+            currencyBaseObserver.onChanged(any())
+        }
+
+        val testObserver = viewModel.currencyBaseLiveData.test()
+            .assertHasValue()
+        val content = testObserver.value()
+        assertEquals(codeCurrency, content)
+
+        excludeRecords { viewModel.currencyBaseLiveData.observeForever(testObserver) }
+
+        confirmVerified(
+            currencyBaseObserver
+        )
+    }
+
+    @Test
+    fun `(+) call getExchangeRates should update loading live data`() = runTest {
+        /* Defines the variables. */
+        val codeCurrency = "IDR"
+        val nameCurrency = "Indonesian Rupiah"
+        val valueCurrency = 15_000.0
+        val baseCodeCurrency = "USD"
+
+        /* Defines the response body for getCurrencyNamesUseCase(). */
+        val currencyNamesResponseBody: CurrencyNamesModel = mockk()
+        val currencyPair = Pair(codeCurrency, nameCurrency)
+        val currencyList = listOf(currencyPair)
+        val currencyNamesFlowResponse = flow<Resource<CurrencyNamesModel>> {
+            emit(Resource.Success(currencyNamesResponseBody))
+        }
+
+        /* Defines the response body for getLatestExchangeRatesUseCase(). */
+        val exchangeRatesResponseBody: ExchangeRatesModel = mockk()
+        val exchangeRateModel = RateModel(
+            code = codeCurrency,
+            name = "",
+            value = valueCurrency
+        )
+        val exchangeRateList = listOf(exchangeRateModel)
+        val exchangeRatesFlowResponse = flow<Resource<ExchangeRatesModel>> {
+            emit(Resource.Success(exchangeRatesResponseBody))
+        }
+
+        /* Setting the answers of mockking. */
+        every { currencyNamesResponseBody.currencyList } returns currencyList
+        every { exchangeRatesResponseBody.rates } returns exchangeRateList
+        every { exchangeRatesResponseBody.base } returns baseCodeCurrency
+        every { runBlocking { getCurrencyNamesUseCase() } } returns currencyNamesFlowResponse
+        every { runBlocking { getLatestExchangeRatesUseCase() } } returns exchangeRatesFlowResponse
+
+        /* Calling the selected function. */
+        viewModel.getExchangeRates()
+
+        verify(exactly = 1) {
+            loadingObserver.onChanged(any())
+        }
+
+        val testObserver = viewModel.loadingLiveData.test()
+            .assertHasValue()
+        val content = testObserver.value()
+        assertEquals(true, content)
+        assertNotEquals(false, content)
+
+        excludeRecords { viewModel.loadingLiveData.observeForever(testObserver) }
+
+        confirmVerified(
+            loadingObserver
+        )
     }
 }

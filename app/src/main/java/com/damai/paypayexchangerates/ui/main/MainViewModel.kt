@@ -45,7 +45,7 @@ class MainViewModel(
     private var currentValueCurrencyBase = 1.0
     //endregion `Variable Data`
 
-    private fun setBaseCurrencyCode(code: String) {
+    fun setBaseCurrencyCode(code: String) {
         code.let(_currencyBaseLiveData::postValue)
     }
 
