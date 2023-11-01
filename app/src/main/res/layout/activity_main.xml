@@ -5,6 +5,8 @@
 
     <data>
 
+        <import type="android.view.View" />
+
         <variable
             name="vm"
             type="com.damai.paypayexchangerates.ui.main.MainViewModel" />
@@ -14,8 +16,18 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white"
-        android:paddingHorizontal="@dimen/dimen_8">
+        android:background="@color/white">
+        
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progressIndicator"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="@{vm.loadingLiveData ? View.VISIBLE : View.GONE}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnCurrency"
@@ -26,7 +38,7 @@
             android:paddingHorizontal="@dimen/dimen_4"
             android:text="@{vm.currencyBaseLiveData}"
             app:layout_constraintBottom_toBottomOf="@+id/etAmount"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/guidelineLeftPadding"
             app:layout_constraintTop_toTopOf="@+id/etAmount"
             tools:text="USD" />
 
@@ -51,7 +63,7 @@
             android:textColor="@color/black"
             android:textSize="@dimen/font_20"
             android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRightPadding"
             app:layout_constraintStart_toEndOf="@+id/spaceBetweenButtonAndEditText"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -74,6 +86,20 @@
             app:spanCount="2"
             tools:itemCount="9"
             tools:listitem="@layout/item_recycler_rates"/>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineLeftPadding"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="@dimen/dimen_8" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineRightPadding"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_end="@dimen/dimen_8" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

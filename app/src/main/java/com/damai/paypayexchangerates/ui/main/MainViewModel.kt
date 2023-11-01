@@ -30,6 +30,9 @@ class MainViewModel(
 
     private val _currencyBaseLiveData = MutableLiveData<String>()
     val currencyBaseLiveData = _currencyBaseLiveData.asLiveData()
+
+    private val _loadingLiveData = MutableLiveData<Boolean>()
+    val loadingLiveData = _loadingLiveData.asLiveData()
     //endregion `Live Data`
 
     //region Variable Data
@@ -39,6 +42,7 @@ class MainViewModel(
     //endregion `Variable Data`
 
     fun getExchangeRates() {
+        _loadingLiveData.value = true
         viewModelScope.launch(dispatcher.io()) {
             val currencyNameListResource = async {
                 getCurrencyNamesUseCase().first()
@@ -53,6 +57,7 @@ class MainViewModel(
             }
 
             getLatestExchangeRatesUseCase().collect { resource ->
+                _loadingLiveData.postValue(false)
                 when (resource) {
                     is Resource.Success -> {
                         resource.model?.let { model ->
