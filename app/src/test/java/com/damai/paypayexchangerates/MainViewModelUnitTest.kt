@@ -74,6 +74,15 @@ class MainViewModelUnitTest {
     private val loadingObserver = mockk<Observer<Boolean>>(relaxed = true)
     private val errorObserver = mockk<Observer<Event<String>>>(relaxed = true)
 
+    private val codeCurrencyIndonesia get() = "IDR"
+    private val nameCurrencyIndonesia get() = "Indonesian Rupiah"
+    private val valueCurrencyIndonesia get() = 15_000.0
+    private val codeCurrencyJapan get() = "YEN"
+    private val nameCurrencyJapan get() = "Japanese Yen"
+    private val valueCurrencyJapan get() = 150.0
+    private val baseCodeCurrency get() = "USD"
+    private val errorMessage get() = "Error"
+
     @Before
     fun setup() {
         database = Room.inMemoryDatabaseBuilder(
@@ -106,12 +115,9 @@ class MainViewModelUnitTest {
 
     @Test
     fun `(+) insert new exchange rate into database should be success`() = runTest {
-        val codeCurrency = "IDR"
-        val valueCurrency = 10_000.0
-
         val rateEntity = RateEntity(
-            code = codeCurrency,
-            value = valueCurrency
+            code = codeCurrencyIndonesia,
+            value = valueCurrencyIndonesia
         )
         rateDao.insert(rateEntity = rateEntity)
 
@@ -119,8 +125,8 @@ class MainViewModelUnitTest {
         val job = async(Dispatchers.IO) {
             val savedExchangeRateList = rateDao.getAllRateEntityList()
             assertThat(savedExchangeRateList).isNotEmpty
-            assertTrue(savedExchangeRateList.first().code == codeCurrency)
-            assertTrue(savedExchangeRateList.first().value == valueCurrency)
+            assertTrue(savedExchangeRateList.first().code == codeCurrencyIndonesia)
+            assertTrue(savedExchangeRateList.first().value == valueCurrencyIndonesia)
             latch.countDown()
         }
         latch.await()
@@ -129,12 +135,9 @@ class MainViewModelUnitTest {
 
     @Test
     fun `(+) insert new currency name into database should be success`() = runTest {
-        val codeCurrency = "IDR"
-        val nameCurrency = "Indonesian Rupiah"
-
         val currencyNameEntity = CurrencyNameEntity(
-            code = codeCurrency,
-            name = nameCurrency
+            code = codeCurrencyIndonesia,
+            name = nameCurrencyIndonesia
         )
         currencyNameDao.insert(currencyNameEntity = currencyNameEntity)
 
@@ -142,8 +145,8 @@ class MainViewModelUnitTest {
         val job = async(Dispatchers.IO) {
             val savedCurrencyNameList = currencyNameDao.getAllCurrencyNameEntityList()
             assertThat(savedCurrencyNameList).isNotEmpty
-            assertTrue(savedCurrencyNameList.first().code == codeCurrency)
-            assertTrue(savedCurrencyNameList.first().name == nameCurrency)
+            assertTrue(savedCurrencyNameList.first().code == codeCurrencyIndonesia)
+            assertTrue(savedCurrencyNameList.first().name == nameCurrencyIndonesia)
             latch.countDown()
         }
         latch.await()
@@ -171,7 +174,6 @@ class MainViewModelUnitTest {
 
     @Test
     fun `(-) get currency name list use case but returns failed`() = runTest {
-        val errorMessage = "Error"
         val flowResponse = flow<Resource<CurrencyNamesModel>> {
             emit(Resource.Error(errorMessage))
         }
@@ -210,7 +212,6 @@ class MainViewModelUnitTest {
 
     @Test
     fun `(-) get latest exchange rate list use case but returns failed`() = runTest {
-        val errorMessage = "Error"
         val flowResponse = flow<Resource<ExchangeRatesModel>> {
             emit(Resource.Error(errorMessage))
         }
@@ -230,44 +231,36 @@ class MainViewModelUnitTest {
 
     @Test
     fun `(+) join currency name list into exchange rates should be success`() {
-        val codeCurrency = "IDR"
-        val nameCurrency = "Indonesian Rupiah"
-        val valueCurrency = 15_000.0
-
         val exchangeRateList = listOf(
             RateModel(
-                code = codeCurrency,
+                code = codeCurrencyIndonesia,
                 name = "",
-                value = valueCurrency
+                value = valueCurrencyIndonesia
             )
         )
 
         val currencyNameList = listOf(
-            Pair(codeCurrency, nameCurrency)
+            Pair(codeCurrencyIndonesia, nameCurrencyIndonesia)
         )
 
         val joinedList = viewModel.joinCurrencyNamesIntoExchangeRates(
             exchangeRateList = exchangeRateList,
             currencyNameList = currencyNameList
         )
-        assertTrue(joinedList != null)
-        assertTrue(joinedList?.first() != null)
-        assertTrue(joinedList?.first()?.code == codeCurrency)
-        assertTrue(joinedList?.first()?.name == nameCurrency)
-        assertTrue(joinedList?.first()?.value == valueCurrency)
+        assertThat(joinedList).isNotNull
+        assertThat(joinedList?.first()).isNotNull
+        assertTrue(joinedList?.first()?.code == codeCurrencyIndonesia)
+        assertTrue(joinedList?.first()?.name == nameCurrencyIndonesia)
+        assertTrue(joinedList?.first()?.value == valueCurrencyIndonesia)
     }
 
     @Test
     fun `(+) join null currency name list into exchange rates should be success`() {
-        val codeCurrency = "IDR"
-        val nameCurrency = ""
-        val valueCurrency = 15_000.0
-
         val exchangeRateList = listOf(
             RateModel(
-                code = codeCurrency,
-                name = nameCurrency,
-                value = valueCurrency
+                code = codeCurrencyIndonesia,
+                name = nameCurrencyIndonesia,
+                value = valueCurrencyIndonesia
             )
         )
 
@@ -275,20 +268,17 @@ class MainViewModelUnitTest {
             exchangeRateList = exchangeRateList,
             currencyNameList = null
         )
-        assertTrue(joinedList != null)
-        assertTrue(joinedList?.first() != null)
-        assertTrue(joinedList?.first()?.code == codeCurrency)
-        assertTrue(joinedList?.first()?.name == nameCurrency)
-        assertTrue(joinedList?.first()?.value == valueCurrency)
+        assertThat(joinedList).isNotNull
+        assertThat(joinedList?.first()).isNotNull
+        assertTrue(joinedList?.first()?.code == codeCurrencyIndonesia)
+        assertTrue(joinedList?.first()?.name == nameCurrencyIndonesia)
+        assertTrue(joinedList?.first()?.value == valueCurrencyIndonesia)
     }
 
     @Test
     fun `(-) join currency name list into empty exchange rates should be empty`() {
-        val codeCurrency = "IDR"
-        val nameCurrency = "Indonesian Rupiah"
-
         val currencyNameList = listOf(
-            Pair(codeCurrency, nameCurrency)
+            Pair(codeCurrencyIndonesia, nameCurrencyIndonesia)
         )
 
         val joinedList = viewModel.joinCurrencyNamesIntoExchangeRates(
@@ -309,8 +299,7 @@ class MainViewModelUnitTest {
 
     @Test
     fun `(+) set base currency should update live data`() = runTest {
-        val codeCurrency = "IDR"
-        viewModel.setBaseCurrencyCode(code = codeCurrency)
+        viewModel.setBaseCurrencyCode(code = codeCurrencyIndonesia)
 
         verify(exactly = 1) {
             currencyBaseObserver.onChanged(any())
@@ -319,7 +308,7 @@ class MainViewModelUnitTest {
         val testObserver = viewModel.currencyBaseLiveData.test()
             .assertHasValue()
         val content = testObserver.value()
-        assertEquals(codeCurrency, content)
+        assertEquals(codeCurrencyIndonesia, content)
 
         excludeRecords { viewModel.currencyBaseLiveData.observeForever(testObserver) }
 
@@ -330,15 +319,9 @@ class MainViewModelUnitTest {
 
     @Test
     fun `(+) call getExchangeRates should update loading live data`() = runTest {
-        /* Defines the variables. */
-        val codeCurrency = "IDR"
-        val nameCurrency = "Indonesian Rupiah"
-        val valueCurrency = 15_000.0
-        val baseCodeCurrency = "USD"
-
         /* Defines the response body for getCurrencyNamesUseCase(). */
         val currencyNamesResponseBody: CurrencyNamesModel = mockk()
-        val currencyPair = Pair(codeCurrency, nameCurrency)
+        val currencyPair = Pair(codeCurrencyIndonesia, nameCurrencyIndonesia)
         val currencyList = listOf(currencyPair)
         val currencyNamesFlowResponse = flow<Resource<CurrencyNamesModel>> {
             emit(Resource.Success(currencyNamesResponseBody))
@@ -347,9 +330,9 @@ class MainViewModelUnitTest {
         /* Defines the response body for getLatestExchangeRatesUseCase(). */
         val exchangeRatesResponseBody: ExchangeRatesModel = mockk()
         val exchangeRateModel = RateModel(
-            code = codeCurrency,
+            code = codeCurrencyIndonesia,
             name = "",
-            value = valueCurrency
+            value = valueCurrencyIndonesia
         )
         val exchangeRateList = listOf(exchangeRateModel)
         val exchangeRatesFlowResponse = flow<Resource<ExchangeRatesModel>> {
@@ -385,15 +368,9 @@ class MainViewModelUnitTest {
 
     @Test
     fun `(+) call getExchangeRates and success should update loading live data`() = runTest {
-        /* Defines the variables. */
-        val codeCurrency = "IDR"
-        val nameCurrency = "Indonesian Rupiah"
-        val valueCurrency = 15_000.0
-        val baseCodeCurrency = "USD"
-
         /* Defines the response body for getCurrencyNamesUseCase(). */
         val currencyNamesResponseBody: CurrencyNamesModel = mockk()
-        val currencyPair = Pair(codeCurrency, nameCurrency)
+        val currencyPair = Pair(codeCurrencyIndonesia, nameCurrencyIndonesia)
         val currencyList = listOf(currencyPair)
         val currencyNamesFlowResponse = flow<Resource<CurrencyNamesModel>> {
             emit(Resource.Success(currencyNamesResponseBody))
@@ -402,9 +379,9 @@ class MainViewModelUnitTest {
         /* Defines the response body for getLatestExchangeRatesUseCase(). */
         val exchangeRatesResponseBody: ExchangeRatesModel = mockk()
         val exchangeRateModel = RateModel(
-            code = codeCurrency,
+            code = codeCurrencyIndonesia,
             name = "",
-            value = valueCurrency
+            value = valueCurrencyIndonesia
         )
         val exchangeRateList = listOf(exchangeRateModel)
         val exchangeRatesFlowResponse = flow<Resource<ExchangeRatesModel>> {
@@ -443,20 +420,15 @@ class MainViewModelUnitTest {
 
     @Test
     fun `(-) call getExchangeRates and failed should update error live data`() = runTest {
-        /* Defines the variables. */
-        val codeCurrency = "IDR"
-        val nameCurrency = "Indonesian Rupiah"
-
         /* Defines the response body for getCurrencyNamesUseCase(). */
         val currencyNamesResponseBody: CurrencyNamesModel = mockk()
-        val currencyPair = Pair(codeCurrency, nameCurrency)
+        val currencyPair = Pair(codeCurrencyIndonesia, nameCurrencyIndonesia)
         val currencyList = listOf(currencyPair)
         val currencyNamesFlowResponse = flow<Resource<CurrencyNamesModel>> {
             emit(Resource.Success(currencyNamesResponseBody))
         }
 
         /* Defines the response error for getLatestExchangeRatesUseCase(). */
-        val errorMessage = "Error"
         val exchangeRatesFlowResponse = flow<Resource<ExchangeRatesModel>> {
             emit(Resource.Error(errorMessage))
         }
@@ -486,5 +458,79 @@ class MainViewModelUnitTest {
                 errorObserver
             )
         }
+    }
+
+    @Test
+    fun `(+) change amount should update the currency value`() = runTest {
+        val newAmount = 2.0
+
+        val newList = listOf(
+            RateModel(
+                code = codeCurrencyIndonesia,
+                name = nameCurrencyIndonesia,
+                value = valueCurrencyIndonesia
+            ),
+            RateModel(
+                code = codeCurrencyJapan,
+                name = nameCurrencyJapan,
+                value = valueCurrencyJapan
+            )
+        )
+        /* Modify variables in viewModel for unit test scenario. */
+        viewModel.unitTestChangeExchangeRatePoolList(newList = newList)
+        viewModel.unitTestChangeCurrentValueCurrencyBase(newValue = 1.0)
+
+        /* Call the selected function. */
+        viewModel.doExchangeRatesCalculation(givenValue = newAmount)
+
+        delay(2_000)
+        verify(exactly = 1) {
+            exchangeRateListObserver.onChanged(any())
+        }
+
+        val testObserver = viewModel.exchangeRateListLiveData.test()
+            .assertHasValue()
+        val content = testObserver.value()
+        assertThat(content).isNotNull
+        assertThat(content).isNotEmpty
+        assertTrue(content.size == 2)
+        val expectedValueIndonesia = valueCurrencyIndonesia * newAmount
+        val expectedValueJapan = valueCurrencyJapan * newAmount
+        assertTrue(content.first().value == expectedValueIndonesia)
+        assertTrue(content[1].value == expectedValueJapan)
+
+        excludeRecords { viewModel.exchangeRateListLiveData.observeForever(testObserver) }
+
+        confirmVerified(
+            exchangeRateListObserver
+        )
+    }
+
+    @Test
+    fun `(-) change amount with 0 value will not update the currency value`() {
+        val newList = listOf(
+            RateModel(
+                code = codeCurrencyIndonesia,
+                name = nameCurrencyIndonesia,
+                value = valueCurrencyIndonesia
+            ),
+            RateModel(
+                code = codeCurrencyJapan,
+                name = nameCurrencyJapan,
+                value = valueCurrencyJapan
+            )
+        )
+        /* Modified variables in viewModel for unit test scenario. */
+        viewModel.unitTestChangeExchangeRateListLiveData(newList = newList)
+
+        /* Call the selected function. */
+        viewModel.doExchangeRatesCalculation(givenValue = 0.0)
+
+        val content = viewModel.exchangeRateListLiveData.value
+        assertThat(content).isNotNull
+        assertThat(content).isNotEmpty
+        assertTrue(content!!.size == 2)
+        assertTrue(content.first().value == valueCurrencyIndonesia)
+        assertTrue(content[1].value == valueCurrencyJapan)
     }
 }

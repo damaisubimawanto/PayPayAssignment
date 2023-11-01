@@ -135,4 +135,19 @@ class MainViewModel(
             doExchangeRatesCalculation(givenValue = latestAmountValue)
         }
     }
+
+    //region Unit Test Functions
+    fun unitTestChangeExchangeRatePoolList(newList: List<RateModel>) {
+        exchangeRatePoolList.clear()
+        exchangeRatePoolList.addAll(newList)
+    }
+
+    fun unitTestChangeExchangeRateListLiveData(newList: List<RateModel>) {
+        _exchangeRateListLiveData.value = newList
+    }
+
+    fun unitTestChangeCurrentValueCurrencyBase(newValue: Double) {
+        currentValueCurrencyBase = newValue
+    }
+    //endregion `Unit Test Functions`
 }
