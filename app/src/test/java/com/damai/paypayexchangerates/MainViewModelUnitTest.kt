@@ -30,6 +30,7 @@ import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
@@ -101,11 +102,6 @@ class MainViewModelUnitTest {
         viewModel.loadingLiveData.removeObserver(loadingObserver)
         viewModel.errorLiveData.removeObserver(errorObserver)
         database.close()
-    }
-
-    @Test
-    fun `test a`() {
-        // TODO: Copy this method
     }
 
     @Test
@@ -385,5 +381,110 @@ class MainViewModelUnitTest {
         confirmVerified(
             loadingObserver
         )
+    }
+
+    @Test
+    fun `(+) call getExchangeRates and success should update loading live data`() = runTest {
+        /* Defines the variables. */
+        val codeCurrency = "IDR"
+        val nameCurrency = "Indonesian Rupiah"
+        val valueCurrency = 15_000.0
+        val baseCodeCurrency = "USD"
+
+        /* Defines the response body for getCurrencyNamesUseCase(). */
+        val currencyNamesResponseBody: CurrencyNamesModel = mockk()
+        val currencyPair = Pair(codeCurrency, nameCurrency)
+        val currencyList = listOf(currencyPair)
+        val currencyNamesFlowResponse = flow<Resource<CurrencyNamesModel>> {
+            emit(Resource.Success(currencyNamesResponseBody))
+        }
+
+        /* Defines the response body for getLatestExchangeRatesUseCase(). */
+        val exchangeRatesResponseBody: ExchangeRatesModel = mockk()
+        val exchangeRateModel = RateModel(
+            code = codeCurrency,
+            name = "",
+            value = valueCurrency
+        )
+        val exchangeRateList = listOf(exchangeRateModel)
+        val exchangeRatesFlowResponse = flow<Resource<ExchangeRatesModel>> {
+            emit(Resource.Success(exchangeRatesResponseBody))
+        }
+
+        /* Setting the answers of mockking. */
+        every { currencyNamesResponseBody.currencyList } returns currencyList
+        every { exchangeRatesResponseBody.rates } returns exchangeRateList
+        every { exchangeRatesResponseBody.base } returns baseCodeCurrency
+        every { runBlocking { getCurrencyNamesUseCase() } } returns currencyNamesFlowResponse
+        every { runBlocking { getLatestExchangeRatesUseCase() } } returns exchangeRatesFlowResponse
+
+        /* Calling the selected function. */
+        viewModel.getExchangeRates()
+
+        getLatestExchangeRatesUseCase().collectLatest {
+            delay(2_000)    /* Wait 2 secs for the loading live data is updated. */
+            verify(exactly = 2) {
+                loadingObserver.onChanged(any())
+            }
+
+            val testObserver = viewModel.loadingLiveData.test()
+                .assertHasValue()
+            val content = testObserver.value()
+            assertEquals(false, content)
+            assertNotEquals(true, content)
+
+            excludeRecords { viewModel.loadingLiveData.observeForever(testObserver) }
+
+            confirmVerified(
+                loadingObserver
+            )
+        }
+    }
+
+    @Test
+    fun `(-) call getExchangeRates and failed should update error live data`() = runTest {
+        /* Defines the variables. */
+        val codeCurrency = "IDR"
+        val nameCurrency = "Indonesian Rupiah"
+
+        /* Defines the response body for getCurrencyNamesUseCase(). */
+        val currencyNamesResponseBody: CurrencyNamesModel = mockk()
+        val currencyPair = Pair(codeCurrency, nameCurrency)
+        val currencyList = listOf(currencyPair)
+        val currencyNamesFlowResponse = flow<Resource<CurrencyNamesModel>> {
+            emit(Resource.Success(currencyNamesResponseBody))
+        }
+
+        /* Defines the response error for getLatestExchangeRatesUseCase(). */
+        val errorMessage = "Error"
+        val exchangeRatesFlowResponse = flow<Resource<ExchangeRatesModel>> {
+            emit(Resource.Error(errorMessage))
+        }
+
+        /* Setting the answers of mockking. */
+        every { currencyNamesResponseBody.currencyList } returns currencyList
+        every { runBlocking { getCurrencyNamesUseCase() } } returns currencyNamesFlowResponse
+        every { runBlocking { getLatestExchangeRatesUseCase() } } returns exchangeRatesFlowResponse
+
+        /* Calling the selected function. */
+        viewModel.getExchangeRates()
+
+        getLatestExchangeRatesUseCase().collectLatest {
+            delay(2_000)    /* Wait 2 secs for the error live data is updated. */
+            verify(exactly = 1) {
+                errorObserver.onChanged(any())
+            }
+
+            val testObserver = viewModel.errorLiveData.test()
+                .assertHasValue()
+            val content = testObserver.value().peekContent()
+            assertEquals(errorMessage, content)
+
+            excludeRecords { viewModel.errorLiveData.observeForever(testObserver) }
+
+            confirmVerified(
+                errorObserver
+            )
+        }
     }
 }
