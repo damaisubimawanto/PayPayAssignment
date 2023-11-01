@@ -17,34 +17,50 @@
         android:background="@color/white"
         android:paddingHorizontal="@dimen/dimen_8">
 
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnCurrency"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dimen_40"
+            android:background="@drawable/bg_transparent_stroke_blue_rounded"
+            android:drawableEnd="@drawable/ic_expand_more_24px"
+            android:paddingHorizontal="@dimen/dimen_4"
+            android:text="@{vm.currencyBaseLiveData}"
+            app:layout_constraintBottom_toBottomOf="@+id/etAmount"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/etAmount"
+            tools:text="USD" />
+
+        <Space
+            android:id="@+id/spaceBetweenButtonAndEditText"
+            android:layout_width="@dimen/dimen_8"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@+id/btnCurrency"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <androidx.appcompat.widget.AppCompatEditText
             android:id="@+id/etAmount"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:focusable="true"
             android:focusableInTouchMode="true"
-            android:gravity="end"
             android:imeOptions="actionDone"
             android:inputType="numberDecimal"
             android:maxLines="1"
             android:singleLine="true"
             android:text="@string/default_amount"
             android:textColor="@color/black"
-            android:textSize="@dimen/font_18"
+            android:textSize="@dimen/font_20"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/spaceBetweenButtonAndEditText"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnCurrency"
+        <Space
+            android:id="@+id/spaceBetweenAmountAndList"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:drawableEnd="@drawable/ic_expand_more_24px"
-            android:text="@{vm.currencyBaseLiveData}"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/etAmount"
-            tools:text="USD" />
+            android:layout_height="@dimen/dimen_8"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/etAmount" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvExchangeRates"
@@ -54,7 +70,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btnCurrency"
+            app:layout_constraintTop_toBottomOf="@+id/spaceBetweenAmountAndList"
             app:spanCount="2"
             tools:itemCount="9"
             tools:listitem="@layout/item_recycler_rates"/>
