@@ -7,6 +7,7 @@ import com.damai.base.BaseViewModel
 import com.damai.base.coroutines.DispatcherProvider
 import com.damai.base.extensions.asLiveData
 import com.damai.base.networks.Resource
+import com.damai.base.utils.Event
 import com.damai.domain.models.RateModel
 import com.damai.domain.usecases.GetCurrencyNamesUseCase
 import com.damai.domain.usecases.GetLatestExchangeRatesUseCase
@@ -33,6 +34,9 @@ class MainViewModel(
 
     private val _loadingLiveData = MutableLiveData<Boolean>()
     val loadingLiveData = _loadingLiveData.asLiveData()
+
+    private val _errorLiveData = MutableLiveData<Event<String>>()
+    val errorLiveData = _errorLiveData.asLiveData()
     //endregion `Live Data`
 
     //region Variable Data
@@ -40,6 +44,29 @@ class MainViewModel(
     private var latestAmountValue = 1.0
     private var currentValueCurrencyBase = 1.0
     //endregion `Variable Data`
+
+    private fun setBaseCurrencyCode(code: String) {
+        code.let(_currencyBaseLiveData::postValue)
+    }
+
+    private fun joinCurrencyNamesIntoExchangeRates(
+        exchangeRateList: List<RateModel>?,
+        currencyNameList: List<Pair<String, String>>?
+    ): List<RateModel>? {
+        return exchangeRateList?.map { rate ->
+            /* Set the map item with RateModel. */
+            val currency = currencyNameList?.find {
+                it.first == rate.code
+            }
+            if (currency == null) {
+                rate
+            } else {
+                rate.copy(
+                    name = currency.second
+                )
+            }
+        }
+    }
 
     fun getExchangeRates() {
         _loadingLiveData.value = true
@@ -65,30 +92,18 @@ class MainViewModel(
 
                             /* We want to join the currency name from currencyNameList into
                              * the exchangeRatePoolList. */
-                            model.rates?.map { rate ->
-                                /* Intermezzo, get the current value of the currency base. */
-                                if (rate.code == model.base) {
-                                    currentValueCurrencyBase = rate.value
-                                }
-
-                                /* Set the map item with RateModel. */
-                                val currency = currencyNameList?.find {
-                                    it.first == rate.code
-                                }
-                                if (currency == null) {
-                                    rate
-                                } else {
-                                    rate.copy(
-                                        name = currency.second
-                                    )
-                                }
-                            }?.let(exchangeRatePoolList::addAll)    /* Added the joined list. */
+                            joinCurrencyNamesIntoExchangeRates(
+                                exchangeRateList = model.rates,
+                                currencyNameList = currencyNameList
+                            )?.let(exchangeRatePoolList::addAll)    /* Added the joined list. */
                             exchangeRatePoolList.let(_exchangeRateListLiveData::postValue)
                             setBaseCurrencyCode(code = model.base)
                         }
                     }
                     is Resource.Error -> {
-
+                        Event(resource.errorMessage.orEmpty()).let(
+                            _errorLiveData::postValue
+                        )
                     }
                 }
             }
@@ -108,10 +123,6 @@ class MainViewModel(
             }
             newList.let(_exchangeRateListLiveData::setValue)
         }
-    }
-
-    private fun setBaseCurrencyCode(code: String) {
-        code.let(_currencyBaseLiveData::postValue)
     }
 
     fun changeBaseCurrency(code: String) {
