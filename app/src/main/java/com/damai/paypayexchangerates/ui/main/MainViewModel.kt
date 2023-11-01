@@ -49,7 +49,7 @@ class MainViewModel(
         code.let(_currencyBaseLiveData::postValue)
     }
 
-    private fun joinCurrencyNamesIntoExchangeRates(
+    fun joinCurrencyNamesIntoExchangeRates(
         exchangeRateList: List<RateModel>?,
         currencyNameList: List<Pair<String, String>>?
     ): List<RateModel>? {
