@@ -5,6 +5,7 @@ import com.damai.base.BaseCache
 import com.damai.base.extensions.remove
 import com.damai.base.extensions.update
 import com.damai.base.utils.Constants.CACHE_MINUTES
+import com.damai.base.utils.TimeHelper
 import java.util.concurrent.TimeUnit
 
 /**
@@ -25,7 +26,7 @@ class HomeCache constructor(
     fun isExchangeRatesCacheExpired(): Boolean {
         val lastUpdate = preferences.getLong(LATEST_EXCHANGE_RATES, 0L)
         return if (lastUpdate > 0L) {
-            val timeNow = System.currentTimeMillis()
+            val timeNow = TimeHelper.getNow()
             val divideToMinutes = TimeUnit.MILLISECONDS.toMinutes(timeNow - lastUpdate)
             divideToMinutes > CACHE_MINUTES
         } else {
@@ -36,7 +37,7 @@ class HomeCache constructor(
     fun isCurrencyNamesCacheExpired(): Boolean {
         val lastUpdate = preferences.getLong(CURRENCY_NAMES, 0L)
         return if (lastUpdate > 0L) {
-            val timeNow = System.currentTimeMillis()
+            val timeNow = TimeHelper.getNow()
             val divideToMinutes = TimeUnit.MILLISECONDS.toMinutes(timeNow - lastUpdate)
             divideToMinutes > CACHE_MINUTES
         } else {

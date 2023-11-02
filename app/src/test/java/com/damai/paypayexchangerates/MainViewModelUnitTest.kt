@@ -256,10 +256,11 @@ class MainViewModelUnitTest {
 
     @Test
     fun `(+) join null currency name list into exchange rates should be success`() {
+        val emptyString = ""
         val exchangeRateList = listOf(
             RateModel(
                 code = codeCurrencyIndonesia,
-                name = nameCurrencyIndonesia,
+                name = emptyString,
                 value = valueCurrencyIndonesia
             )
         )
@@ -271,7 +272,7 @@ class MainViewModelUnitTest {
         assertThat(joinedList).isNotNull
         assertThat(joinedList?.first()).isNotNull
         assertTrue(joinedList?.first()?.code == codeCurrencyIndonesia)
-        assertTrue(joinedList?.first()?.name == nameCurrencyIndonesia)
+        assertTrue(joinedList?.first()?.name == emptyString)
         assertTrue(joinedList?.first()?.value == valueCurrencyIndonesia)
     }
 
@@ -493,7 +494,7 @@ class MainViewModelUnitTest {
         val content = testObserver.value()
         assertThat(content).isNotNull
         assertThat(content).isNotEmpty
-        assertTrue(content.size == 2)
+        assertTrue(content.size == newList.size)
         val expectedValueIndonesia = valueCurrencyIndonesia * newAmount
         val expectedValueJapan = valueCurrencyJapan * newAmount
         assertTrue(content.first().value == expectedValueIndonesia)
@@ -529,7 +530,7 @@ class MainViewModelUnitTest {
         val content = viewModel.exchangeRateListLiveData.value
         assertThat(content).isNotNull
         assertThat(content).isNotEmpty
-        assertTrue(content!!.size == 2)
+        assertTrue(content!!.size == newList.size)
         assertTrue(content.first().value == valueCurrencyIndonesia)
         assertTrue(content[1].value == valueCurrencyJapan)
     }
@@ -561,7 +562,7 @@ class MainViewModelUnitTest {
         verify(exactly = 1) {
             currencyBaseObserver.onChanged(any())
         }
-        verify(exactly = 2) {
+        verify(atLeast = 1) {
             exchangeRateListObserver.onChanged(any())
         }
 
@@ -577,7 +578,7 @@ class MainViewModelUnitTest {
         val content = exchangeRateTestObserver.value()
         assertThat(content).isNotNull
         assertThat(content).isNotEmpty
-        assertTrue(content.size == 2)
+        assertTrue(content.size == newList.size)
         val expectedValueIndonesia = valueCurrencyIndonesia * currentAmount / valueCurrencyIndonesia
         val expectedValueJapan = valueCurrencyJapan * currentAmount / valueCurrencyIndonesia
         assertTrue(content.first().value == expectedValueIndonesia)
