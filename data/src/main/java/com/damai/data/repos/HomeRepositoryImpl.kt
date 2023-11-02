@@ -1,7 +1,6 @@
 package com.damai.data.repos
 
 import com.damai.base.coroutines.DispatcherProvider
-import com.damai.base.extensions.mappingResponseError
 import com.damai.base.networks.NetworkResource
 import com.damai.base.networks.Resource
 import com.damai.base.utils.Constants.API_KEY
@@ -14,7 +13,6 @@ import com.damai.data.mappers.CurrencyNamesResponseToCurrencyNamesModelMapper
 import com.damai.data.mappers.ExchangeRatesResponseToExchangeRatesModelMapper
 import com.damai.data.mappers.RateEntityToRateModelMapper
 import com.damai.data.mappers.RateModelToRateEntityMapper
-import com.damai.data.responses.CurrencyNamesResponse
 import com.damai.domain.daos.CurrencyNameDao
 import com.damai.domain.daos.RateDao
 import com.damai.domain.models.CurrencyNamesModel
@@ -87,12 +85,7 @@ class HomeRepositoryImpl(
                 val response = homeService.getCurrencyNames(
                     appId = API_KEY
                 )
-                return currencyNamesMapper.map(
-                    value = CurrencyNamesResponse().apply {
-                        currencyMap = response
-                        mappingResponseError(response = response)
-                    }
-                )
+                return currencyNamesMapper.map(value = response)
             }
 
             override fun shouldFetchFromRemote(): Boolean = false

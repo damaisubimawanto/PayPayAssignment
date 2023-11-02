@@ -3,6 +3,9 @@ package com.damai.paypayexchangerates
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.damai.base.networks.Resource
+import com.damai.base.utils.Constants.MAP_KEY_ERROR
+import com.damai.base.utils.Constants.MAP_KEY_MESSAGE
+import com.damai.base.utils.Constants.MAP_KEY_STATUS_CODE
 import com.damai.data.apiservices.HomeService
 import com.damai.data.caches.HomeCache
 import com.damai.data.mappers.CurrencyNameEntityToCurrencyNamesModelMapper
@@ -15,7 +18,9 @@ import com.damai.data.repos.HomeRepositoryImpl
 import com.damai.data.responses.ExchangeRatesResponse
 import com.damai.domain.daos.CurrencyNameDao
 import com.damai.domain.daos.RateDao
+import com.damai.domain.entities.CurrencyNameEntity
 import com.damai.domain.entities.RateEntity
+import com.damai.domain.models.CurrencyNamesModel
 import com.damai.domain.models.ExchangeRatesModel
 import com.damai.domain.models.RateModel
 import com.damai.paypayexchangerates.utils.CoroutineTestRule
@@ -73,6 +78,9 @@ class HomeRepositoryUnitTest {
     private val errorCode get() = 500
     private val errorMessage get() = "Error"
     private val emptyString get() = ""
+    private val mapKeyError get() = MAP_KEY_ERROR
+    private val mapKeyStatusCode get() = MAP_KEY_STATUS_CODE
+    private val mapKeyMessage get() = MAP_KEY_MESSAGE
     //endregion `Getter Variables`
 
     @Before
@@ -384,4 +392,67 @@ class HomeRepositoryUnitTest {
         }
     }
     //endregion `Unit Tests - Get Latest Exchange Rates`
+
+    //region Unit Tests - Get Currency Names
+    @Test
+    fun `(+) get latest currency names from API fetch with no local cache is success`() = runTest {
+        val responseBody: Map<String, String> = mockk()
+        val responseModel: CurrencyNamesModel = mockk()
+        val isExpired = true
+        val currencyPair = Pair(codeCurrencyIndonesia, nameCurrencyIndonesia)
+        val currencyPairList = listOf(currencyPair)
+        val currencyNameEntity = CurrencyNameEntity(
+            code = codeCurrencyIndonesia,
+            name = nameCurrencyIndonesia
+        )
+        val currencyNameEntityList = listOf(currencyNameEntity)
+
+        every { responseBody.containsKey(mapKeyError) } returns false
+        every { responseBody.containsKey(mapKeyStatusCode) } returns false
+        every { responseBody.containsKey(mapKeyMessage) } returns false
+        every { responseModel.status } returns successCode
+        every { responseModel.currencyList } returns currencyPairList
+        every {
+            runBlocking {
+                homeService.getCurrencyNames(appId = any())
+            }
+        } returns responseBody
+        every {
+            runBlocking { currencyNameDao.getAllCurrencyNameEntityList() }
+        } returns listOf() /* Should return empty list from local storage. */
+        every { homeCache.isCurrencyNamesCacheExpired() } returns isExpired
+        every { homeCache.setLatestUpdateCurrencyNames(value = any()) } returns Unit
+        every { currencyNamesMapper.map(value = responseBody) } returns responseModel
+        every {
+            currencyNameEntityToModelMapper.map(value = currencyNameEntityList)
+        } returns responseModel
+        every {
+            currencyNamePairToCurrencyNameEntityMapper.map(value = currencyPair)
+        } returns currencyNameEntity
+
+        homeRepositoryImpl.getCurrencyNames().collectLatest {
+            assertTrue(it is Resource.Success)
+            val model = (it as Resource.Success).model
+            assertThat(model).isNotNull
+            assertThat(model!!.currencyList).isNotNull
+            assertThat(model.currencyList).isNotEmpty
+            assertTrue(model.currencyList.first().first == codeCurrencyIndonesia)
+
+            verify {
+                runBlocking {
+                    homeService.getCurrencyNames(appId = any())
+                }
+            }
+            verify(atLeast = 1) { homeCache.setLatestUpdateCurrencyNames(value = any()) }
+            verify(atLeast = 1) { runBlocking { currencyNameDao.getAllCurrencyNameEntityList() } }
+            verify(atLeast = 1) { runBlocking { currencyNameDao.insert(currencyNameEntity = any()) } }
+
+            confirmVerified(
+                homeService,
+                homeCache,
+                currencyNameDao
+            )
+        }
+    }
+    //endregion `Unit Tests - Get Currency Names`
 }
