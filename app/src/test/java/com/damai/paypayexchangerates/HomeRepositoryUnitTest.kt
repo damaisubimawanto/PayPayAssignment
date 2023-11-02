@@ -30,6 +30,7 @@ import io.mockk.verify
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -51,15 +52,12 @@ class HomeRepositoryUnitTest {
     @get:Rule
     val coroutineRule = CoroutineTestRule()
 
-    private lateinit var database: AppDatabase
-    private lateinit var rateDao: RateDao
-    private lateinit var currencyNameDao: CurrencyNameDao
     private lateinit var homeRepositoryImpl: HomeRepositoryImpl
 
     private val homeService = mockk<HomeService>()
     private val homeCache = mockk<HomeCache>()
-    private val rateDaoMock = mockk<RateDao>(relaxed = true)
-    private val currencyNameDaoMock = mockk<CurrencyNameDao>(relaxed = true)
+    private val rateDao = mockk<RateDao>(relaxed = true)
+    private val currencyNameDao = mockk<CurrencyNameDao>(relaxed = true)
     private val exchangeRatesMapper = mockk<ExchangeRatesResponseToExchangeRatesModelMapper>()
     private val currencyNamesMapper = mockk<CurrencyNamesResponseToCurrencyNamesModelMapper>()
     private val currencyNameEntityToModelMapper = mockk<CurrencyNameEntityToCurrencyNamesModelMapper>()
@@ -70,18 +68,12 @@ class HomeRepositoryUnitTest {
     private val codeCurrencyIndonesia get() = "IDR"
     private val nameCurrencyIndonesia get() = "Indonesian Rupiah"
     private val valueCurrencyIndonesia get() = 15_000.0
+    private val valueCurrencyIndonesiaUpdated get() = 15_800.0
     private val successCode get() = 200
     private val emptyString get() = ""
 
     @Before
     fun setup() {
-        database = Room.inMemoryDatabaseBuilder(
-            ApplicationProvider.getApplicationContext(),
-            AppDatabase::class.java
-        ).allowMainThreadQueries().build()
-        rateDao = database.rateDao()
-        currencyNameDao = database.currencyNameDao()
-
         homeRepositoryImpl = HomeRepositoryImpl(
             homeService = homeService,
             homeCache = homeCache,
@@ -99,7 +91,7 @@ class HomeRepositoryUnitTest {
 
     @After
     fun cleanUp() {
-        database.close()
+        // Do nothing to be cleaned up.
     }
 
     @Test
@@ -132,16 +124,21 @@ class HomeRepositoryUnitTest {
             }
         } returns responseBody
         every {
-            runBlocking { rateDaoMock.getAllRateEntityList() }
-        } returns rateEntityList
+            runBlocking { rateDao.getAllRateEntityList() }
+        } returns listOf()
         every { homeCache.isExchangeRatesCacheExpired() } returns isExpired
+        every { homeCache.setLatestUpdateExchangeRates(value = any()) } returns Unit
         every { exchangeRatesMapper.map(value = responseBody) } returns responseModel
         every { rateEntityToRateModelMapper.map(value = rateEntityList) } returns rateModelList
         every { rateModelToRateEntityMapper.map(value = rateModel) } returns rateEntity
-        every { homeCache.setLatestUpdateExchangeRates(value = any()) } returns Unit
 
         homeRepositoryImpl.getLatestExchangeRates().collectLatest {
             assertTrue(it is Resource.Success)
+            val model = (it as Resource.Success).model
+            assertThat(model).isNotNull
+            assertThat(model!!.rates).isNotNull
+            assertThat(model.rates).isNotEmpty
+            assertTrue(model.rates!!.first().value == valueCurrencyIndonesia)
 
             verify {
                 runBlocking {
@@ -152,10 +149,136 @@ class HomeRepositoryUnitTest {
                 }
             }
             verify(atLeast = 1) { homeCache.setLatestUpdateExchangeRates(value = any()) }
+            verify(atLeast = 1) { runBlocking { rateDao.getAllRateEntityList() } }
+            verify(atLeast = 1) { runBlocking { rateDao.insert(rateEntity = any()) } }
 
             confirmVerified(
                 homeService,
-                homeCache
+                homeCache,
+                rateDao
+            )
+        }
+    }
+
+    @Test
+    fun `(+) get latest exchange rate from local cache and it is not expired should success`() = runTest {
+        val responseBody: ExchangeRatesResponse = mockk()
+        val responseModel: ExchangeRatesModel = mockk()
+        val isExpired = false
+        val rateModel = RateModel(
+            code = codeCurrencyIndonesia,
+            name = emptyString,
+            value = valueCurrencyIndonesia
+        )
+        val rateModelList = listOf(rateModel)
+        val rateEntity = RateEntity(
+            code = codeCurrencyIndonesia,
+            value = valueCurrencyIndonesia
+        )
+        val rateEntityList = listOf(rateEntity)
+
+        every { responseBody.error } returns false
+        every { responseBody.status } returns successCode
+        every { responseModel.status } returns successCode
+        every { responseModel.rates } returns rateModelList
+        every {
+            runBlocking {
+                homeService.getLatestExchangeRates(
+                    appId = any(),
+                    base = any()
+                )
+            }
+        } returns responseBody
+        every {
+            runBlocking { rateDao.getAllRateEntityList() }
+        } returns rateEntityList
+        every { homeCache.isExchangeRatesCacheExpired() } returns isExpired
+        every { homeCache.setLatestUpdateExchangeRates(value = any()) } returns Unit
+        every { exchangeRatesMapper.map(value = responseBody) } returns responseModel
+        every { rateEntityToRateModelMapper.map(value = rateEntityList) } returns rateModelList
+        every { rateModelToRateEntityMapper.map(value = rateModel) } returns rateEntity
+
+        homeRepositoryImpl.getLatestExchangeRates().collectLatest {
+            assertTrue(it is Resource.Success)
+            val model = (it as Resource.Success).model
+            assertThat(model).isNotNull
+            assertThat(model!!.rates).isNotNull
+            assertThat(model.rates).isNotEmpty
+            assertTrue(model.rates!!.first().value == valueCurrencyIndonesia)
+
+            verify(atLeast = 1) { homeCache.isExchangeRatesCacheExpired() }
+            verify(atLeast = 1) { runBlocking { rateDao.getAllRateEntityList() } }
+
+            confirmVerified(
+                homeCache,
+                rateDao
+            )
+        }
+    }
+
+    @Test
+    fun `(+) get latest exchange rate from local cache and it is expired should success`() = runTest {
+        val responseBody: ExchangeRatesResponse = mockk()
+        val responseModel: ExchangeRatesModel = mockk()
+        val isExpired = true
+        val rateModel = RateModel(
+            code = codeCurrencyIndonesia,
+            name = emptyString,
+            value = valueCurrencyIndonesiaUpdated
+        )
+        val rateModelList = listOf(rateModel)
+        val rateEntity = RateEntity(
+            code = codeCurrencyIndonesia,
+            value = valueCurrencyIndonesia
+        )
+        val rateEntityList = listOf(rateEntity)
+
+        every { responseBody.error } returns false
+        every { responseBody.status } returns successCode
+        every { responseModel.status } returns successCode
+        every { responseModel.rates } returns rateModelList
+        every {
+            runBlocking {
+                homeService.getLatestExchangeRates(
+                    appId = any(),
+                    base = any()
+                )
+            }
+        } returns responseBody
+        every {
+            runBlocking { rateDao.getAllRateEntityList() }
+        } returns rateEntityList
+        every { homeCache.isExchangeRatesCacheExpired() } returns isExpired
+        every { exchangeRatesMapper.map(value = responseBody) } returns responseModel
+        every { rateEntityToRateModelMapper.map(value = rateEntityList) } returns rateModelList
+        every { rateModelToRateEntityMapper.map(value = rateModel) } returns rateEntity
+        every { homeCache.setLatestUpdateExchangeRates(value = any()) } returns Unit
+
+        homeRepositoryImpl.getLatestExchangeRates().collectLatest {
+            assertTrue(it is Resource.Success)
+            val model = (it as Resource.Success).model
+            assertThat(model).isNotNull
+            assertThat(model!!.rates).isNotNull
+            assertThat(model.rates).isNotEmpty
+            assertTrue(model.rates!!.first().value == valueCurrencyIndonesiaUpdated)
+
+            verify {
+                runBlocking {
+                    homeService.getLatestExchangeRates(
+                        appId = any(),
+                        base = any()
+                    )
+                }
+            }
+            verify(atLeast = 1) { homeCache.isExchangeRatesCacheExpired() }
+            verify(atLeast = 1) { homeCache.setLatestUpdateExchangeRates(value = any()) }
+            verify(atLeast = 1) { runBlocking { rateDao.getAllRateEntityList() } }
+            verify(atLeast = 1) { runBlocking { rateDao.insert(rateEntity = any()) } }
+
+            confirmVerified(
+                homeService,
+                homeCache,
+                rateDao
             )
         }
     }

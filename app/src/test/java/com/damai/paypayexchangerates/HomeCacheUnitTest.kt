@@ -157,8 +157,6 @@ class HomeCacheUnitTest {
         )
     }
 
-    // asd
-
     @Test
     fun `(+) get latest currency names after 30 minutes is expired`() = runTest {
         val expected = true
