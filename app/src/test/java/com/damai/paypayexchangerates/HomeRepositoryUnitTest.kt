@@ -1,7 +1,5 @@
 package com.damai.paypayexchangerates
 
-import androidx.room.Room
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.damai.base.networks.Resource
@@ -20,7 +18,6 @@ import com.damai.domain.daos.RateDao
 import com.damai.domain.entities.RateEntity
 import com.damai.domain.models.ExchangeRatesModel
 import com.damai.domain.models.RateModel
-import com.damai.paypayexchangerates.application.AppDatabase
 import com.damai.paypayexchangerates.utils.CoroutineTestRule
 import com.damai.paypayexchangerates.utils.InstantExecutorExtension
 import io.mockk.confirmVerified
@@ -70,6 +67,8 @@ class HomeRepositoryUnitTest {
     private val valueCurrencyIndonesia get() = 15_000.0
     private val valueCurrencyIndonesiaUpdated get() = 15_800.0
     private val successCode get() = 200
+    private val errorCode get() = 500
+    private val errorMessage get() = "Error"
     private val emptyString get() = ""
 
     @Before
@@ -125,7 +124,7 @@ class HomeRepositoryUnitTest {
         } returns responseBody
         every {
             runBlocking { rateDao.getAllRateEntityList() }
-        } returns listOf()
+        } returns listOf() /* Should return empty list from local storage. */
         every { homeCache.isExchangeRatesCacheExpired() } returns isExpired
         every { homeCache.setLatestUpdateExchangeRates(value = any()) } returns Unit
         every { exchangeRatesMapper.map(value = responseBody) } returns responseModel
@@ -274,6 +273,103 @@ class HomeRepositoryUnitTest {
             verify(atLeast = 1) { homeCache.setLatestUpdateExchangeRates(value = any()) }
             verify(atLeast = 1) { runBlocking { rateDao.getAllRateEntityList() } }
             verify(atLeast = 1) { runBlocking { rateDao.insert(rateEntity = any()) } }
+
+            confirmVerified(
+                homeService,
+                homeCache,
+                rateDao
+            )
+        }
+    }
+
+    @Test
+    fun `(-) get latest exchange rates from API with no local cache, but error from server should return error`() = runTest {
+        val responseBody: ExchangeRatesResponse = mockk()
+        val responseModel: ExchangeRatesModel = mockk()
+
+        every { responseBody.error } returns true
+        every { responseBody.status } returns errorCode
+        every { responseModel.status } returns errorCode
+        every { responseModel.message } returns errorMessage
+        every {
+            runBlocking {
+                homeService.getLatestExchangeRates(
+                    appId = any(),
+                    base = any()
+                )
+            }
+        } returns responseBody
+        every { exchangeRatesMapper.map(value = responseBody) } returns responseModel
+
+        homeRepositoryImpl.getLatestExchangeRates().collectLatest {
+            assertTrue(it is Resource.Error)
+            assertTrue((it as Resource.Error).errorMessage == errorMessage)
+
+            verify {
+                runBlocking {
+                    homeService.getLatestExchangeRates(
+                        appId = any(),
+                        base = any()
+                    )
+                }
+            }
+
+            confirmVerified(
+                homeService
+            )
+        }
+    }
+
+    @Test
+    fun `(-) get latest exchange rate from local cache and it is expired, but error from server should return error`() = runTest {
+        val responseBody: ExchangeRatesResponse = mockk()
+        val responseModel: ExchangeRatesModel = mockk()
+        val isExpired = true
+        val rateModel = RateModel(
+            code = codeCurrencyIndonesia,
+            name = emptyString,
+            value = valueCurrencyIndonesiaUpdated
+        )
+        val rateModelList = listOf(rateModel)
+        val rateEntity = RateEntity(
+            code = codeCurrencyIndonesia,
+            value = valueCurrencyIndonesia
+        )
+        val rateEntityList = listOf(rateEntity)
+
+        every { responseBody.error } returns true
+        every { responseBody.status } returns errorCode
+        every { responseModel.status } returns errorCode
+        every { responseModel.message } returns errorMessage
+        every {
+            runBlocking {
+                homeService.getLatestExchangeRates(
+                    appId = any(),
+                    base = any()
+                )
+            }
+        } returns responseBody
+        every {
+            runBlocking { rateDao.getAllRateEntityList() }
+        } returns rateEntityList
+        every { homeCache.isExchangeRatesCacheExpired() } returns isExpired
+        every { exchangeRatesMapper.map(value = responseBody) } returns responseModel
+        every { rateEntityToRateModelMapper.map(value = rateEntityList) } returns rateModelList
+
+        homeRepositoryImpl.getLatestExchangeRates().collectLatest {
+            assertTrue(it is Resource.Error)
+            assertTrue((it as Resource.Error).errorMessage == errorMessage)
+
+            verify {
+                runBlocking {
+                    homeService.getLatestExchangeRates(
+                        appId = any(),
+                        base = any()
+                    )
+                }
+            }
+            verify(atLeast = 1) { homeCache.isExchangeRatesCacheExpired() }
+            verify(atLeast = 1) { runBlocking { rateDao.getAllRateEntityList() } }
 
             confirmVerified(
                 homeService,
