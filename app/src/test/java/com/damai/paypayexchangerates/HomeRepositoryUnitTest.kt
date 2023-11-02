@@ -51,6 +51,7 @@ class HomeRepositoryUnitTest {
 
     private lateinit var homeRepositoryImpl: HomeRepositoryImpl
 
+    //region Mockk Variables
     private val homeService = mockk<HomeService>()
     private val homeCache = mockk<HomeCache>()
     private val rateDao = mockk<RateDao>(relaxed = true)
@@ -61,7 +62,9 @@ class HomeRepositoryUnitTest {
     private val currencyNamePairToCurrencyNameEntityMapper = mockk<CurrencyNamePairToCurrencyNameEntityMapper>()
     private val rateEntityToRateModelMapper = mockk<RateEntityToRateModelMapper>()
     private val rateModelToRateEntityMapper = mockk<RateModelToRateEntityMapper>()
+    //endregion `Mockk Variables`
 
+    //region Getter Variables
     private val codeCurrencyIndonesia get() = "IDR"
     private val nameCurrencyIndonesia get() = "Indonesian Rupiah"
     private val valueCurrencyIndonesia get() = 15_000.0
@@ -70,6 +73,7 @@ class HomeRepositoryUnitTest {
     private val errorCode get() = 500
     private val errorMessage get() = "Error"
     private val emptyString get() = ""
+    //endregion `Getter Variables`
 
     @Before
     fun setup() {
@@ -93,6 +97,7 @@ class HomeRepositoryUnitTest {
         // Do nothing to be cleaned up.
     }
 
+    //region Unit Tests - Get Latest Exchange Rates
     @Test
     fun `(+) get latest exchange rates from API fetch with no local cache is success`() = runTest {
         val responseBody: ExchangeRatesResponse = mockk()
@@ -378,4 +383,5 @@ class HomeRepositoryUnitTest {
             )
         }
     }
+    //endregion `Unit Tests - Get Latest Exchange Rates`
 }

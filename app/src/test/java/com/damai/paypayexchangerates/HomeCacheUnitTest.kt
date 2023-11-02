@@ -29,9 +29,11 @@ import org.robolectric.annotation.Config
 @Config(manifest = Config.NONE)
 class HomeCacheUnitTest {
 
+    //region Mockk Variables
     private val preferences = mockk<SharedPreferences>(relaxed = true)
     private val editor = mockk<SharedPreferences.Editor>(relaxed = true)
     private val timeHelper = mockk<TimeHelper>(relaxed = true)
+    //endregion `Mockk Variables`
 
     private val homeCache = HomeCache(
         preferences = preferences
@@ -42,6 +44,7 @@ class HomeCacheUnitTest {
         every { preferences.edit() } returns editor
     }
 
+    //region Unit Tests - Set Updated Time into Shared Preferences
     @Test
     fun `(+) set latest exchange rates updated time is saved in shared preferences`() = runTest {
         val expected = System.currentTimeMillis()
@@ -87,7 +90,9 @@ class HomeCacheUnitTest {
             preferences
         )
     }
+    //endregion `Unit Tests - Set Updated Time into Shared Preferences`
 
+    //region Unit Tests - Latest Exchange Rates Cache
     @Test
     fun `(+) get latest exchange rates after 30 minutes is expired`() = runTest {
         val expected = true
@@ -156,7 +161,9 @@ class HomeCacheUnitTest {
             preferences
         )
     }
+    //endregion `Unit Tests - Latest Exchange Rates Cache`
 
+    //region Unit Tests - Latest Currency Names Cache
     @Test
     fun `(+) get latest currency names after 30 minutes is expired`() = runTest {
         val expected = true
@@ -225,4 +232,5 @@ class HomeCacheUnitTest {
             preferences
         )
     }
+    //endregion `Unit Tests - Latest Currency Names Cache`
 }

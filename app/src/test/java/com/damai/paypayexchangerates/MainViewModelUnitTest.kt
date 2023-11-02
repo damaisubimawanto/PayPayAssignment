@@ -65,6 +65,7 @@ class MainViewModelUnitTest {
     private lateinit var currencyNameDao: CurrencyNameDao
     private lateinit var viewModel: MainViewModel
 
+    //region Mockk Variables
     private val getLatestExchangeRatesUseCase = mockk<GetLatestExchangeRatesUseCase>()
     private val getCurrencyNamesUseCase = mockk<GetCurrencyNamesUseCase>()
     private val homeRepository = mockk<HomeRepository>()
@@ -73,7 +74,9 @@ class MainViewModelUnitTest {
     private val currencyBaseObserver = mockk<Observer<String>>(relaxed = true)
     private val loadingObserver = mockk<Observer<Boolean>>(relaxed = true)
     private val errorObserver = mockk<Observer<Event<String>>>(relaxed = true)
+    //endregion `Mockk Variables`
 
+    //region Getter Variables
     private val codeCurrencyIndonesia get() = "IDR"
     private val nameCurrencyIndonesia get() = "Indonesian Rupiah"
     private val valueCurrencyIndonesia get() = 15_000.0
@@ -82,6 +85,7 @@ class MainViewModelUnitTest {
     private val valueCurrencyJapan get() = 150.0
     private val baseCodeCurrency get() = "USD"
     private val errorMessage get() = "Error"
+    //endregion `Getter Variables`
 
     @Before
     fun setup() {
@@ -113,6 +117,7 @@ class MainViewModelUnitTest {
         database.close()
     }
 
+    //region Unit Tests - Local Database
     @Test
     fun `(+) insert new exchange rate into database should be success`() = runTest {
         val rateEntity = RateEntity(
@@ -152,7 +157,9 @@ class MainViewModelUnitTest {
         latch.await()
         job.cancelAndJoin()
     }
+    //endregion `Unit Tests - Local Database`
 
+    //region Unit Tests - Get Currency Name List
     @Test
     fun `(+) get currency name list use case and returns success`() = runTest {
         val responseBody: CurrencyNamesModel = mockk()
@@ -190,7 +197,9 @@ class MainViewModelUnitTest {
             )
         }
     }
+    //endregion `Unit Tests - Get Currency Name List`
 
+    //region Unit Tests - Get Exchange Rate List
     @Test
     fun `(+) get latest exchange rate list use case and returns success`() = runTest {
         val responseBody: ExchangeRatesModel = mockk()
@@ -228,7 +237,9 @@ class MainViewModelUnitTest {
             )
         }
     }
+    //endregion `Unit Tests - Get Exchange Rate List`
 
+    //region Unit Tests - Join Currency Names Into Exchanges Rates
     @Test
     fun `(+) join currency name list into exchange rates should be success`() {
         val exchangeRateList = listOf(
@@ -297,27 +308,9 @@ class MainViewModelUnitTest {
         )
         assertTrue(joinedList == null)
     }
+    //endregion `Unit Tests - Join Currency Names Into Exchanges Rates`
 
-    @Test
-    fun `(+) set base currency should update live data`() = runTest {
-        viewModel.setBaseCurrencyCode(code = codeCurrencyIndonesia)
-
-        verify(exactly = 1) {
-            currencyBaseObserver.onChanged(any())
-        }
-
-        val testObserver = viewModel.currencyBaseLiveData.test()
-            .assertHasValue()
-        val content = testObserver.value()
-        assertEquals(codeCurrencyIndonesia, content)
-
-        excludeRecords { viewModel.currencyBaseLiveData.observeForever(testObserver) }
-
-        confirmVerified(
-            currencyBaseObserver
-        )
-    }
-
+    //region Unit Tests - Update Loading Live Data in getExchangeRates()
     @Test
     fun `(+) call getExchangeRates should update loading live data`() = runTest {
         /* Defines the response body for getCurrencyNamesUseCase(). */
@@ -418,7 +411,9 @@ class MainViewModelUnitTest {
             )
         }
     }
+    //endregion `Unit Tests - Update Loading Live Data in getExchangeRates()`
 
+    //region Unit Tests - Update Error Live Data in getExchangeRates()
     @Test
     fun `(-) call getExchangeRates and failed should update error live data`() = runTest {
         /* Defines the response body for getCurrencyNamesUseCase(). */
@@ -460,7 +455,9 @@ class MainViewModelUnitTest {
             )
         }
     }
+    //endregion `Unit Tests - Update Error Live Data in getExchangeRates()`
 
+    //region Unit Tests - Change Amount
     @Test
     fun `(+) change amount should update the currency value`() = runTest {
         val newAmount = 2.0
@@ -534,6 +531,28 @@ class MainViewModelUnitTest {
         assertTrue(content.first().value == valueCurrencyIndonesia)
         assertTrue(content[1].value == valueCurrencyJapan)
     }
+    //endregion `Unit Tests - Change Amount`
+
+    //region Unit Tests - Change Base Currency
+    @Test
+    fun `(+) set base currency should update live data`() = runTest {
+        viewModel.setBaseCurrencyCode(code = codeCurrencyIndonesia)
+
+        verify(exactly = 1) {
+            currencyBaseObserver.onChanged(any())
+        }
+
+        val testObserver = viewModel.currencyBaseLiveData.test()
+            .assertHasValue()
+        val content = testObserver.value()
+        assertEquals(codeCurrencyIndonesia, content)
+
+        excludeRecords { viewModel.currencyBaseLiveData.observeForever(testObserver) }
+
+        confirmVerified(
+            currencyBaseObserver
+        )
+    }
 
     @Test
     fun `(+) change base currency should update the value of currency base and do the calculation`() = runTest {
@@ -594,4 +613,5 @@ class MainViewModelUnitTest {
             exchangeRateListObserver
         )
     }
+    //endregion `Unit Tests - Change Base Currency`
 }
