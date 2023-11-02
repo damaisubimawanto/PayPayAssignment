@@ -149,7 +149,5 @@ class MainViewModel(
     fun unitTestChangeCurrentValueCurrencyBase(newValue: Double) {
         currentValueCurrencyBase = newValue
     }
-
-    fun unitTestGetCurrentValueCurrencyBase(): Double = currentValueCurrencyBase
     //endregion `Unit Test Functions`
 }
