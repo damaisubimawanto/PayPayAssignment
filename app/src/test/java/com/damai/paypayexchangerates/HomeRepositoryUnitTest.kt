@@ -454,5 +454,204 @@ class HomeRepositoryUnitTest {
             )
         }
     }
+
+    @Test
+    fun `(+) get latest currency names from local cache and it is not expired should success`() = runTest {
+        val responseBody: Map<String, String> = mockk()
+        val responseModel: CurrencyNamesModel = mockk()
+        val isExpired = false
+        val currencyPair = Pair(codeCurrencyIndonesia, nameCurrencyIndonesia)
+        val currencyPairList = listOf(currencyPair)
+        val currencyNameEntity = CurrencyNameEntity(
+            code = codeCurrencyIndonesia,
+            name = nameCurrencyIndonesia
+        )
+        val currencyNameEntityList = listOf(currencyNameEntity)
+
+        every { responseBody.containsKey(mapKeyError) } returns false
+        every { responseBody.containsKey(mapKeyStatusCode) } returns false
+        every { responseBody.containsKey(mapKeyMessage) } returns false
+        every { responseModel.status } returns successCode
+        every { responseModel.currencyList } returns currencyPairList
+        every {
+            runBlocking {
+                homeService.getCurrencyNames(appId = any())
+            }
+        } returns responseBody
+        every {
+            runBlocking { currencyNameDao.getAllCurrencyNameEntityList() }
+        } returns currencyNameEntityList
+        every { homeCache.isCurrencyNamesCacheExpired() } returns isExpired
+        every { homeCache.setLatestUpdateCurrencyNames(value = any()) } returns Unit
+        every { currencyNamesMapper.map(value = responseBody) } returns responseModel
+        every {
+            currencyNameEntityToModelMapper.map(value = currencyNameEntityList)
+        } returns responseModel
+        every {
+            currencyNamePairToCurrencyNameEntityMapper.map(value = currencyPair)
+        } returns currencyNameEntity
+
+        homeRepositoryImpl.getCurrencyNames().collectLatest {
+            assertTrue(it is Resource.Success)
+            val model = (it as Resource.Success).model
+            assertThat(model).isNotNull
+            assertThat(model!!.currencyList).isNotNull
+            assertThat(model.currencyList).isNotEmpty
+            assertTrue(model.currencyList.first().first == codeCurrencyIndonesia)
+
+            verify(atLeast = 1) { homeCache.isCurrencyNamesCacheExpired() }
+            verify(atLeast = 1) { runBlocking { currencyNameDao.getAllCurrencyNameEntityList() } }
+
+            confirmVerified(
+                homeCache,
+                rateDao
+            )
+        }
+    }
+
+    @Test
+    fun `(+) get latest currency names from local cache and it is expired should success`() = runTest {
+        val responseBody: Map<String, String> = mockk()
+        val responseModel: CurrencyNamesModel = mockk()
+        val isExpired = true
+        val currencyPair = Pair(codeCurrencyIndonesia, nameCurrencyIndonesia)
+        val currencyPairList = listOf(currencyPair)
+        val currencyNameEntity = CurrencyNameEntity(
+            code = codeCurrencyIndonesia,
+            name = nameCurrencyIndonesia
+        )
+        val currencyNameEntityList = listOf(currencyNameEntity)
+
+        every { responseBody.containsKey(mapKeyError) } returns false
+        every { responseBody.containsKey(mapKeyStatusCode) } returns false
+        every { responseBody.containsKey(mapKeyMessage) } returns false
+        every { responseModel.status } returns successCode
+        every { responseModel.currencyList } returns currencyPairList
+        every {
+            runBlocking {
+                homeService.getCurrencyNames(appId = any())
+            }
+        } returns responseBody
+        every {
+            runBlocking { currencyNameDao.getAllCurrencyNameEntityList() }
+        } returns currencyNameEntityList
+        every { homeCache.isCurrencyNamesCacheExpired() } returns isExpired
+        every { currencyNamesMapper.map(value = responseBody) } returns responseModel
+        every { homeCache.setLatestUpdateCurrencyNames(value = any()) } returns Unit
+        every { currencyNamesMapper.map(value = responseBody) } returns responseModel
+        every {
+            currencyNameEntityToModelMapper.map(value = currencyNameEntityList)
+        } returns responseModel
+        every {
+            currencyNamePairToCurrencyNameEntityMapper.map(value = currencyPair)
+        } returns currencyNameEntity
+
+        homeRepositoryImpl.getCurrencyNames().collectLatest {
+            assertTrue(it is Resource.Success)
+            val model = (it as Resource.Success).model
+            assertThat(model).isNotNull
+            assertThat(model).isNotNull
+            assertThat(model!!.currencyList).isNotNull
+            assertThat(model.currencyList).isNotEmpty
+            assertTrue(model.currencyList.first().first == codeCurrencyIndonesia)
+
+            verify {
+                runBlocking {
+                    homeService.getCurrencyNames(appId = any())
+                }
+            }
+            verify(atLeast = 1) { homeCache.isCurrencyNamesCacheExpired() }
+            verify(atLeast = 1) { homeCache.setLatestUpdateCurrencyNames(value = any()) }
+            verify(atLeast = 1) { runBlocking { currencyNameDao.getAllCurrencyNameEntityList() } }
+            verify(atLeast = 1) { runBlocking { currencyNameDao.insert(currencyNameEntity = any()) } }
+
+            confirmVerified(
+                homeService,
+                homeCache,
+                rateDao
+            )
+        }
+    }
+
+    @Test
+    fun `(-) get latest currency names from API with no local cache, but error from server should return error`() = runTest {
+        val responseBody: Map<String, String> = mockk()
+        val responseModel: CurrencyNamesModel = mockk()
+
+        every { responseBody.containsKey(mapKeyError) } returns true
+        every { responseBody.containsKey(mapKeyStatusCode) } returns true
+        every { responseBody.containsKey(mapKeyMessage) } returns true
+        every { responseModel.status } returns errorCode
+        every { responseModel.message } returns errorMessage
+        every {
+            runBlocking {
+                homeService.getCurrencyNames(appId = any())
+            }
+        } returns responseBody
+        every { currencyNamesMapper.map(value = responseBody) } returns responseModel
+
+        homeRepositoryImpl.getCurrencyNames().collectLatest {
+            assertTrue(it is Resource.Error)
+            assertTrue((it as Resource.Error).errorMessage == errorMessage)
+
+            verify {
+                runBlocking {
+                    homeService.getCurrencyNames(appId = any())
+                }
+            }
+
+            confirmVerified(
+                homeService
+            )
+        }
+    }
+
+    @Test
+    fun `(-) get latest currency names from local cache and it is expired, but error from server should return error`() = runTest {
+        val responseBody: Map<String, String> = mockk()
+        val responseModel: CurrencyNamesModel = mockk()
+        val isExpired = true
+        val currencyNameEntity = CurrencyNameEntity(
+            code = codeCurrencyIndonesia,
+            name = nameCurrencyIndonesia
+        )
+        val currencyNameEntityList = listOf(currencyNameEntity)
+
+        every { responseBody.containsKey(mapKeyError) } returns true
+        every { responseBody.containsKey(mapKeyStatusCode) } returns true
+        every { responseBody.containsKey(mapKeyMessage) } returns true
+        every { responseModel.status } returns errorCode
+        every { responseModel.message } returns errorMessage
+        every {
+            runBlocking {
+                homeService.getCurrencyNames(appId = any())
+            }
+        } returns responseBody
+        every {
+            runBlocking { currencyNameDao.getAllCurrencyNameEntityList() }
+        } returns currencyNameEntityList
+        every { homeCache.isCurrencyNamesCacheExpired() } returns isExpired
+        every { currencyNamesMapper.map(value = responseBody) } returns responseModel
+        every { currencyNameEntityToModelMapper.map(value = currencyNameEntityList) } returns responseModel
+
+        homeRepositoryImpl.getCurrencyNames().collectLatest {
+            assertTrue(it is Resource.Error)
+            assertTrue((it as Resource.Error).errorMessage == errorMessage)
+
+            verify {
+                runBlocking {
+                    homeService.getCurrencyNames(appId = any())
+                }
+            }
+            verify(atLeast = 1) { homeCache.isCurrencyNamesCacheExpired() }
+            verify(atLeast = 1) { runBlocking { currencyNameDao.getAllCurrencyNameEntityList() } }
+
+            confirmVerified(
+                homeService,
+                homeCache,
+                currencyNameDao
+            )
+        }
+    }
     //endregion `Unit Tests - Get Currency Names`
 }
