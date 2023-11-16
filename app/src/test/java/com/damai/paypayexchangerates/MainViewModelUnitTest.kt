@@ -644,7 +644,7 @@ class MainViewModelUnitTest {
         assertEquals(expected, actual)
     }
 
-    fun compress(input: String): String {
+    private fun compress(input: String): String {
         var number = 0
         var currentChar = ""
         val stringBuilder = StringBuilder()
