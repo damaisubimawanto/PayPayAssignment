@@ -4,6 +4,8 @@ import com.damai.base.BaseActivity
 import com.damai.base.extensions.addOnTextChanged
 import com.damai.base.extensions.observe
 import com.damai.base.extensions.setCustomOnClickListener
+import com.damai.base.extensions.showShortToast
+import com.damai.base.utils.EventObserver
 import com.damai.paypayexchangerates.R
 import com.damai.paypayexchangerates.databinding.ActivityMainBinding
 import com.damai.paypayexchangerates.navigations.PageNavigationApi
@@ -51,6 +53,10 @@ class MainActivity : BaseActivity<ActivityMainBinding, MainViewModel>() {
         observe(viewModel.exchangeRateListLiveData) {
             ratesAdapter.submitList(it)
         }
+
+        observe(viewModel.errorLiveData, EventObserver {
+            showShortToast(message = it)
+        })
     }
 
     override fun ActivityMainBinding.onPreparationFinished() {

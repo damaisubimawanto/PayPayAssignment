@@ -1,6 +1,8 @@
 package com.damai.base.extensions
 
+import android.content.Context
 import android.content.res.Resources
+import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import com.damai.base.utils.Event
@@ -24,5 +26,10 @@ fun <T> FragmentActivity.observe(
 ) {
     liveData.observe(this, observer)
 }
+
+fun Context.showShortToast(message: String) {
+    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+}
+
 
 fun getScreenHeight() = Resources.getSystem().displayMetrics.heightPixels
